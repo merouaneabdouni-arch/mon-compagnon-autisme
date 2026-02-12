@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Application d'aide pour enfants autistes et TDAH - Routines, émotions, concentration">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mon Compagnon">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🌈</text></svg>">
+    <title>Mon Compagnon - App pour enfants autistes/TDAH</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        #root {
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Animations douces */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Données des émotions
+        const emotions = [
+            { id: 1, name: 'Joyeux', icon: '😊', color: '#FFD700', tips: ['Partage ta joie avec quelqu\'un', 'Fais une activité que tu aimes', 'Danse ou chante'] },
+            { id: 2, name: 'Triste', icon: '😢', color: '#6495ED', tips: ['Parle à quelqu\'un en qui tu as confiance', 'Fais un câlin', 'Dessine ce que tu ressens'] },
+            { id: 3, name: 'En colère', icon: '😠', color: '#FF6347', tips: ['Respire profondément 5 fois', 'Compte jusqu\'à 10', 'Tape dans un coussin'] },
+            { id: 4, name: 'Anxieux', icon: '😰', color: '#DDA0DD', tips: ['Respiration lente', 'Pense à un endroit calme', 'Serre une balle anti-stress'] },
+            { id: 5, name: 'Calme', icon: '😌', color: '#98FB98', tips: ['Continue ce que tu fais', 'Profite de ce moment', 'Écoute de la musique douce'] },
+            { id: 6, name: 'Fatigué', icon: '😴', color: '#B0C4DE', tips: ['Prends une pause', 'Bois de l\'eau', 'Fais une sieste si possible'] }
+        ];
+
+        // Exercices de concentration
+        const concentrationExercises = {
+            young: [
+                { id: 1, name: 'Trouve les différences', icon: '🔍', duration: 5, description: 'Observe bien deux images similaires' },
+                { id: 2, name: 'Jeu des couleurs', icon: '🎨', duration: 3, description: 'Nomme toutes les choses rouges autour de toi' },
+                { id: 3, name: 'Écoute attentive', icon: '👂', duration: 2, description: 'Ferme les yeux et compte les sons que tu entends' }
+            ],
+            middle: [
+                { id: 1, name: 'Memory visuel', icon: '🧠', duration: 10, description: 'Mémorise 5 objets puis récite-les' },
+                { id: 2, name: 'Suite logique', icon: '🔢', duration: 8, description: 'Continue les séquences : 2-4-6-?' },
+                { id: 3, name: 'Labyrinthe', icon: '🗺️', duration: 5, description: 'Trace le chemin sans lever le crayon' },
+                { id: 4, name: 'Attention soutenue', icon: '👁️', duration: 10, description: 'Lis un texte et compte tous les "e"' }
+            ],
+            older: [
+                { id: 1, name: 'Pomodoro Focus', icon: '🍅', duration: 25, description: 'Travaille 25 min sans interruption' },
+                { id: 2, name: 'Sudoku', icon: '🔢', duration: 15, description: 'Résous une grille de sudoku' },
+                { id: 3, name: 'Lecture active', icon: '📖', duration: 20, description: 'Lis et résume chaque paragraphe' },
+                { id: 4, name: 'Méditation focus', icon: '🧘', duration: 10, description: 'Concentre-toi sur ta respiration' }
+            ]
+        };
+
+        // Exercices de respiration
+        const breathingExercises = [
+            { id: 1, name: 'Respiration du ballon', icon: '🎈', duration: 3, steps: ['Inspire par le nez (4s)', 'Gonfle ton ventre comme un ballon', 'Expire par la bouche (6s)', 'Répète 5 fois'] },
+            { id: 2, name: 'Respiration 4-4-4', icon: '🔵', duration: 5, steps: ['Inspire en comptant jusqu\'à 4', 'Retiens 4 secondes', 'Expire en comptant jusqu\'à 4', 'Répète 5 fois'] },
+            { id: 3, name: 'Respiration de l\'abeille', icon: '🐝', duration: 2, steps: ['Inspire profondément', 'En expirant, fais "mmmmm"', 'Sens les vibrations', 'Répète 5 fois'] }
+        ];
+
+        // Données initiales selon l'âge
+        const getRoutinesByAge = (ageGroup) => {
+            if (ageGroup === 'young') { // 3-6 ans
+                return [
+                    {
+                        id: 1,
+                        name: "Routine du Matin",
+                        icon: "🌅",
+                        steps: [
+                            { id: 1, name: "Se réveiller", icon: "🛏️", duration: 5, completed: false },
+                            { id: 2, name: "S'habiller", icon: "👕", duration: 10, completed: false },
+                            { id: 3, name: "Petit déjeuner", icon: "🥣", duration: 15, completed: false },
+                            { id: 4, name: "Se brosser les dents", icon: "🦷", duration: 3, completed: false }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: "Routine du Soir",
+                        icon: "🌙",
+                        steps: [
+                            { id: 1, name: "Ranger les jouets", icon: "🧸", duration: 10, completed: false },
+                            { id: 2, name: "Prendre le bain", icon: "🛁", duration: 15, completed: false },
+                            { id: 3, name: "Mettre le pyjama", icon: "🧥", duration: 5, completed: false },
+                            { id: 4, name: "Histoire du soir", icon: "📖", duration: 10, completed: false },
+                            { id: 5, name: "Dodo", icon: "😴", duration: 0, completed: false }
+                        ]
+                    }
+                ];
+            } else if (ageGroup === 'middle') { // 7-9 ans
+                return [
+                    {
+                        id: 1,
+                        name: "Routine du Matin",
+                        icon: "🌅",
+                        steps: [
+                            { id: 1, name: "Réveil et étirements", icon: "🛏️", duration: 5, completed: false },
+                            { id: 2, name: "S'habiller", icon: "👕", duration: 10, completed: false },
+                            { id: 3, name: "Petit déjeuner", icon: "🥣", duration: 15, completed: false },
+                            { id: 4, name: "Hygiène (dents, visage)", icon: "🦷", duration: 5, completed: false },
+                            { id: 5, name: "Préparer le cartable", icon: "🎒", duration: 10, completed: false }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: "Routine des Devoirs",
+                        icon: "📚",
+                        steps: [
+                            { id: 1, name: "Installer l'espace de travail", icon: "🪑", duration: 3, completed: false },
+                            { id: 2, name: "Lire le cahier de texte", icon: "📖", duration: 5, completed: false },
+                            { id: 3, name: "Faire les exercices", icon: "✏️", duration: 30, completed: false },
+                            { id: 4, name: "Réviser les leçons", icon: "📝", duration: 15, completed: false },
+                            { id: 5, name: "Ranger les affaires", icon: "🗂️", duration: 5, completed: false }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: "Routine du Soir",
+                        icon: "🌙",
+                        steps: [
+                            { id: 1, name: "Ranger la chambre", icon: "🧸", duration: 10, completed: false },
+                            { id: 2, name: "Douche", icon: "🚿", duration: 15, completed: false },
+                            { id: 3, name: "Mettre le pyjama", icon: "🧥", duration: 5, completed: false },
+                            { id: 4, name: "Lecture calme", icon: "📚", duration: 15, completed: false },
+                            { id: 5, name: "Coucher", icon: "😴", duration: 0, completed: false }
+                        ]
+                    }
+                ];
+            } else { // 10-12 ans
+                return [
+                    {
+                        id: 1,
+                        name: "Routine du Matin",
+                        icon: "🌅",
+                        steps: [
+                            { id: 1, name: "Réveil et exercices", icon: "💪", duration: 10, completed: false },
+                            { id: 2, name: "Hygiène complète", icon: "🚿", duration: 15, completed: false },
+                            { id: 3, name: "S'habiller", icon: "👕", duration: 10, completed: false },
+                            { id: 4, name: "Petit déjeuner équilibré", icon: "🥣", duration: 20, completed: false },
+                            { id: 5, name: "Vérifier le cartable", icon: "🎒", duration: 5, completed: false },
+                            { id: 6, name: "Planifier la journée", icon: "📅", duration: 5, completed: false }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: "Organisation des Devoirs",
+                        icon: "📚",
+                        steps: [
+                            { id: 1, name: "Consulter l'agenda", icon: "📅", duration: 5, completed: false },
+                            { id: 2, name: "Prioriser les tâches", icon: "📋", duration: 5, completed: false },
+                            { id: 3, name: "Session de travail 1", icon: "✏️", duration: 25, completed: false },
+                            { id: 4, name: "Pause active", icon: "🧘", duration: 10, completed: false },
+                            { id: 5, name: "Session de travail 2", icon: "📝", duration: 25, completed: false },
+                            { id: 6, name: "Révisions", icon: "🔍", duration: 15, completed: false },
+                            { id: 7, name: "Ranger et planifier demain", icon: "✅", duration: 5, completed: false }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: "Gestion du Stress",
+                        icon: "🧘",
+                        steps: [
+                            { id: 1, name: "Identifier mes émotions", icon: "😊", duration: 5, completed: false },
+                            { id: 2, name: "Respiration profonde", icon: "🌬️", duration: 5, completed: false },
+                            { id: 3, name: "Exercice de relaxation", icon: "🧘‍♂️", duration: 10, completed: false },
+                            { id: 4, name: "Activité plaisante", icon: "🎨", duration: 15, completed: false }
+                        ]
+                    },
+                    {
+                        id: 4,
+                        name: "Routine du Soir",
+                        icon: "🌙",
+                        steps: [
+                            { id: 1, name: "Préparer affaires pour demain", icon: "🎒", duration: 10, completed: false },
+                            { id: 2, name: "Ranger ma chambre", icon: "🧹", duration: 10, completed: false },
+                            { id: 3, name: "Douche relaxante", icon: "🚿", duration: 15, completed: false },
+                            { id: 4, name: "Temps calme (lecture/musique)", icon: "📚", duration: 20, completed: false },
+                            { id: 5, name: "Extinction écrans", icon: "📱", duration: 0, completed: false },
+                            { id: 6, name: "Coucher", icon: "😴", duration: 0, completed: false }
+                        ]
+                    }
+                ];
+            }
+        };
+
+        // Composant principal
+        function App() {
+            const [view, setView] = useState('home'); // home, ageSelect, parent, child, routine, emotions, concentration, breathing, learning, timer, emotionJournal, miniGame, messages
+            const [ageGroup, setAgeGroup] = useState(null); // young (3-6), middle (7-9), older (10-12)
+            const [routines, setRoutines] = useState([]);
+            const [selectedRoutine, setSelectedRoutine] = useState(null);
+            const [currentStep, setCurrentStep] = useState(0);
+            const [stars, setStars] = useState(0);
+            const [timerSeconds, setTimerSeconds] = useState(0);
+            const [isTimerRunning, setIsTimerRunning] = useState(false);
+            const [selectedEmotion, setSelectedEmotion] = useState(null);
+            const [selectedExercise, setSelectedExercise] = useState(null);
+            
+            // Nouveau : Journal des émotions
+            const [emotionHistory, setEmotionHistory] = useState([]);
+            
+            // Nouveau : Messages parent-enfant
+            const [messages, setMessages] = useState([
+                { id: 1, from: 'parent', text: 'Bravo mon champion ! Continue comme ça ! 💪', time: 'Il y a 2h', read: false },
+                { id: 2, from: 'parent', text: 'N\'oublie pas ta routine du matin demain 🌅', time: 'Hier', read: true }
+            ]);
+            
+            // Nouveau : Planning des routines
+            const [scheduledRoutines, setScheduledRoutines] = useState([
+                { id: 1, routineId: 1, time: '07:30', days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'], enabled: true },
+                { id: 2, routineId: 2, time: '20:00', days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'], enabled: true }
+            ]);
+
+            const selectAge = (age) => {
+                setAgeGroup(age);
+                setRoutines(getRoutinesByAge(age));
+            };
+            
+            const logEmotion = (emotion) => {
+                const now = new Date();
+                setEmotionHistory(prev => [{
+                    emotion: emotion,
+                    timestamp: now.toLocaleString('fr-FR'),
+                    date: now.toLocaleDateString('fr-FR'),
+                    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                }, ...prev].slice(0, 20)); // Garde les 20 dernières
+            };
+            
+            const sendMessage = (text) => {
+                setMessages(prev => [{
+                    id: Date.now(),
+                    from: 'child',
+                    text: text,
+                    time: 'À l\'instant',
+                    read: false
+                }, ...prev]);
+            };
+
+            // Timer effect
+            useEffect(() => {
+                let interval;
+                if (isTimerRunning && timerSeconds > 0) {
+                    interval = setInterval(() => {
+                        setTimerSeconds(prev => {
+                            if (prev <= 1) {
+                                setIsTimerRunning(false);
+                                playCompletionSound();
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [isTimerRunning, timerSeconds]);
+
+            const playCompletionSound = () => {
+                // Son de félicitation (simulé)
+                console.log("🎉 Bravo !");
+            };
+
+            const completeStep = () => {
+                if (!selectedRoutine) return;
+                
+                const updatedRoutine = { ...selectedRoutine };
+                updatedRoutine.steps[currentStep].completed = true;
+                setSelectedRoutine(updatedRoutine);
+                setStars(prev => prev + 1);
+                
+                if (currentStep < updatedRoutine.steps.length - 1) {
+                    setTimeout(() => setCurrentStep(prev => prev + 1), 1000);
+                } else {
+                    setTimeout(() => {
+                        alert("🎉 Bravo ! Tu as terminé toute la routine !");
+                        setView('routinesList');
+                        setCurrentStep(0);
+                    }, 1000);
+                }
+            };
+
+            // Écran d'accueil
+            if (view === 'home') {
+                return (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '100vh',
+                        padding: '20px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    }}>
+                        <div className="fade-in" style={{
+                            background: 'white',
+                            borderRadius: '30px',
+                            padding: '60px 40px',
+                            textAlign: 'center',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                            maxWidth: '500px'
+                        }}>
+                            <div style={{ fontSize: '80px', marginBottom: '20px' }}>🌈</div>
+                            <h1 style={{ color: '#667eea', fontSize: '36px', marginBottom: '20px' }}>
+                                Mon Compagnon
+                            </h1>
+                            <p style={{ color: '#666', fontSize: '18px', marginBottom: '40px' }}>
+                                Application d'aide pour enfants autistes et TDAH
+                            </p>
+                            
+                            <button onClick={() => setView('ageSelect')} style={{
+                                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '20px',
+                                padding: '20px 40px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                marginBottom: '15px',
+                                width: '100%',
+                                boxShadow: '0 4px 15px rgba(240, 147, 251, 0.4)',
+                                transition: 'transform 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                            >
+                                👦 Mode Enfant
+                            </button>
+                            
+                            <button onClick={() => setView('parent')} style={{
+                                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '20px',
+                                padding: '20px 40px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                width: '100%',
+                                boxShadow: '0 4px 15px rgba(79, 172, 254, 0.4)',
+                                transition: 'transform 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                            >
+                                👨‍👩‍👧 Mode Parent
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Écran de sélection d'âge
+            if (view === 'ageSelect') {
+                return (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '100vh',
+                        padding: '20px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    }}>
+                        <div className="fade-in" style={{
+                            background: 'white',
+                            borderRadius: '30px',
+                            padding: '40px',
+                            textAlign: 'center',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                            maxWidth: '800px',
+                            width: '100%'
+                        }}>
+                            <button onClick={() => setView('home')} style={{
+                                background: '#f0f0f0',
+                                border: 'none',
+                                borderRadius: '10px',
+                                padding: '10px 20px',
+                                fontSize: '16px',
+                                cursor: 'pointer',
+                                marginBottom: '20px'
+                            }}>
+                                ← Retour
+                            </button>
+
+                            <div style={{ fontSize: '60px', marginBottom: '20px' }}>🎂</div>
+                            <h1 style={{ color: '#667eea', fontSize: '32px', marginBottom: '15px' }}>
+                                Quel âge as-tu ?
+                            </h1>
+                            <p style={{ color: '#666', fontSize: '18px', marginBottom: '40px' }}>
+                                Choisis ton groupe d'âge pour avoir une expérience adaptée
+                            </p>
+                            
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                                gap: '20px'
+                            }}>
+                                <button onClick={() => {
+                                    selectAge('young');
+                                    setView('child');
+                                }} style={{
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '20px',
+                                    padding: '30px 20px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(240, 147, 251, 0.4)',
+                                    transition: 'transform 0.2s',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '15px'
+                                }}
+                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                                >
+                                    <div style={{ fontSize: '50px' }}>🧸</div>
+                                    <div>
+                                        <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>
+                                            3-6 ans
+                                        </div>
+                                        <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                                            Maternelle
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button onClick={() => {
+                                    selectAge('middle');
+                                    setView('child');
+                                }} style={{
+                                    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '20px',
+                                    padding: '30px 20px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(79, 172, 254, 0.4)',
+                                    transition: 'transform 0.2s',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '15px'
+                                }}
+                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                                >
+                                    <div style={{ fontSize: '50px' }}>📚</div>
+                                    <div>
+                                        <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>
+                                            7-9 ans
+                                        </div>
+                                        <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                                            Primaire
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button onClick={() => {
+                                    selectAge('older');
+                                    setView('child');
+                                }} style={{
+                                    background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '20px',
+                                    padding: '30px 20px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(17, 153, 142, 0.4)',
+                                    transition: 'transform 0.2s',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '15px'
+                                }}
+                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                                >
+                                    <div style={{ fontSize: '50px' }}>🎯</div>
+                                    <div>
+                                        <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>
+                                            10-12 ans
+                                        </div>
+                                        <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                                            Collège
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <p style={{ color: '#999', fontSize: '14px', marginTop: '30px', fontStyle: 'italic' }}>
+                                💡 Les parents peuvent changer l'âge à tout moment dans les paramètres
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Interface enfant - Menu principal
+            if (view === 'child') {
+                const getAgeStyles = () => {
+                    if (ageGroup === 'young') {
+                        return {
+                            background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                            titleSize: '48px',
+                            iconSize: '70px',
+                            cardPadding: '35px'
+                        };
+                    } else if (ageGroup === 'middle') {
+                        return {
+                            background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            titleSize: '42px',
+                            iconSize: '60px',
+                            cardPadding: '30px'
+                        };
+                    } else {
+                        return {
+                            background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+                            titleSize: '36px',
+                            iconSize: '55px',
+                            cardPadding: '28px'
+                        };
+                    }
+                };
+
+                const styles = getAgeStyles();
+
+                const mainModules = [
+                    { id: 'routines', name: 'Mes Routines', icon: '📋', color: '#4facfe', view: 'routinesList' },
+                    { id: 'emotions', name: 'Mes Émotions', icon: '😊', color: '#f093fb', view: 'emotions' },
+                    { id: 'concentration', name: 'Concentration', icon: '🧠', color: '#11998e', view: 'concentration' },
+                    { id: 'breathing', name: 'Respiration', icon: '🧘', color: '#667eea', view: 'breathing' },
+                    { id: 'learning', name: 'Jeux Éducatifs', icon: '🎮', color: '#f5576c', view: 'learning' },
+                    { id: 'timer', name: 'Mon Timer', icon: '⏱️', color: '#ffa726', view: 'timerVisual' },
+                    { id: 'journal', name: 'Mon Journal', icon: '📊', color: '#9c27b0', view: 'emotionJournal' },
+                    { id: 'messages', name: 'Messages', icon: '💬', color: '#00bcd4', view: 'messages', badge: messages.filter(m => !m.read && m.from === 'parent').length }
+                ];
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: styles.background,
+                        padding: '20px'
+                    }}>
+                        {/* Header avec étoiles */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '30px'
+                        }}>
+                            <button onClick={() => setView('ageSelect')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                🏠
+                            </button>
+                            
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '20px',
+                                padding: '15px 30px',
+                                fontSize: '32px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                {'⭐'.repeat(Math.min(stars, 10))}
+                                {stars > 10 && ` +${stars - 10}`}
+                            </div>
+                        </div>
+
+                        {/* Titre */}
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: styles.titleSize,
+                            marginBottom: '40px',
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+                        }}>
+                            {ageGroup === 'young' ? 'Mon Compagnon 🌈' : 
+                             ageGroup === 'middle' ? 'Mes Activités 🎯' : 
+                             'Mon Espace Personnel 📊'}
+                        </h1>
+
+                        {/* Grille des modules */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: ageGroup === 'young' ? 
+                                'repeat(auto-fit, minmax(200px, 1fr))' :
+                                'repeat(auto-fit, minmax(220px, 1fr))',
+                            gap: '25px',
+                            maxWidth: '1100px',
+                            margin: '0 auto'
+                        }}>
+                            {mainModules.map(module => (
+                                <button key={module.id} onClick={() => setView(module.view)} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: styles.cardPadding,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s',
+                                    textAlign: 'center',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-10px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.2)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                                }}
+                                >
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: '5px',
+                                        background: module.color
+                                    }}></div>
+                                    {module.badge && module.badge > 0 && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '15px',
+                                            right: '15px',
+                                            background: '#f44336',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            width: '30px',
+                                            height: '30px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '16px',
+                                            fontWeight: 'bold',
+                                            boxShadow: '0 2px 8px rgba(244, 67, 54, 0.5)',
+                                            animation: 'pulse 2s infinite'
+                                        }}>
+                                            {module.badge}
+                                        </div>
+                                    )}
+                                    <div style={{ fontSize: styles.iconSize, marginBottom: '15px' }}>
+                                        {module.icon}
+                                    </div>
+                                    <div style={{ fontSize: ageGroup === 'young' ? '22px' : '20px', color: '#333', fontWeight: 'bold' }}>
+                                        {module.name}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Liste des routines
+            if (view === 'routinesList') {
+                const styles = {
+                    background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                    titleSize: ageGroup === 'young' ? '48px' : ageGroup === 'middle' ? '42px' : '36px',
+                    iconSize: ageGroup === 'young' ? '80px' : ageGroup === 'middle' ? '70px' : '60px'
+                };
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: styles.background,
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: styles.titleSize,
+                            marginBottom: '40px',
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+                        }}>
+                            {ageGroup === 'young' ? 'Mes Routines 🌟' : 
+                             ageGroup === 'middle' ? 'Mes Routines Quotidiennes 📋' : 
+                             'Organisation & Routines 📊'}
+                        </h1>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: ageGroup === 'young' ? 
+                                'repeat(auto-fit, minmax(250px, 1fr))' :
+                                'repeat(auto-fit, minmax(300px, 1fr))',
+                            gap: '30px',
+                            maxWidth: ageGroup === 'young' ? '900px' : '1200px',
+                            margin: '0 auto'
+                        }}>
+                            {routines.map(routine => (
+                                <button key={routine.id} onClick={() => {
+                                    setSelectedRoutine(routine);
+                                    setCurrentStep(0);
+                                    setView('routine');
+                                }} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: ageGroup === 'young' ? '40px' : '35px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s',
+                                    textAlign: 'center'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-10px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.2)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                                }}
+                                >
+                                    <div style={{ fontSize: styles.iconSize, marginBottom: '15px' }}>
+                                        {routine.icon}
+                                    </div>
+                                    <div style={{ fontSize: ageGroup === 'young' ? '28px' : '24px', color: '#333', fontWeight: 'bold' }}>
+                                        {routine.name}
+                                    </div>
+                                    <div style={{ 
+                                        fontSize: ageGroup === 'young' ? '18px' : '16px', 
+                                        color: '#999', 
+                                        marginTop: '10px' 
+                                    }}>
+                                        {routine.steps.length} étapes
+                                        {ageGroup !== 'young' && ` · ${routine.steps.reduce((acc, s) => acc + s.duration, 0)} min`}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Gestion des émotions
+            if (view === 'emotions') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => {
+                            setSelectedEmotion(null);
+                            setView('child');
+                        }} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        {!selectedEmotion ? (
+                            <>
+                                <h1 style={{
+                                    textAlign: 'center',
+                                    color: '#333',
+                                    fontSize: ageGroup === 'young' ? '48px' : '40px',
+                                    marginBottom: '20px'
+                                }}>
+                                    Comment te sens-tu ? 💭
+                                </h1>
+                                <p style={{
+                                    textAlign: 'center',
+                                    color: '#666',
+                                    fontSize: ageGroup === 'young' ? '24px' : '20px',
+                                    marginBottom: '40px'
+                                }}>
+                                    Choisis l'émotion qui correspond à ce que tu ressens
+                                </p>
+
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                    gap: '25px',
+                                    maxWidth: '1000px',
+                                    margin: '0 auto'
+                                }}>
+                                    {emotions.map(emotion => (
+                                        <button key={emotion.id} onClick={() => {
+                                            setSelectedEmotion(emotion);
+                                            logEmotion(emotion);
+                                        }} style={{
+                                            background: 'white',
+                                            border: `4px solid ${emotion.color}`,
+                                            borderRadius: '25px',
+                                            padding: '30px 20px',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                            transition: 'transform 0.3s',
+                                            textAlign: 'center'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                        >
+                                            <div style={{ fontSize: '80px', marginBottom: '15px' }}>
+                                                {emotion.icon}
+                                            </div>
+                                            <div style={{ fontSize: '22px', color: '#333', fontWeight: 'bold' }}>
+                                                {emotion.name}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div style={{
+                                maxWidth: '700px',
+                                margin: '0 auto'
+                            }}>
+                                <div className="fade-in" style={{
+                                    background: 'white',
+                                    borderRadius: '30px',
+                                    padding: '50px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                                    border: `5px solid ${selectedEmotion.color}`
+                                }}>
+                                    <div style={{ fontSize: '120px', marginBottom: '20px' }}>
+                                        {selectedEmotion.icon}
+                                    </div>
+                                    <h2 style={{ fontSize: '36px', color: '#333', marginBottom: '30px' }}>
+                                        Tu te sens {selectedEmotion.name.toLowerCase()}
+                                    </h2>
+                                    
+                                    <div style={{
+                                        background: '#f9f9f9',
+                                        borderRadius: '20px',
+                                        padding: '30px',
+                                        marginBottom: '30px',
+                                        textAlign: 'left'
+                                    }}>
+                                        <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '20px', textAlign: 'center' }}>
+                                            💡 Conseils pour toi :
+                                        </h3>
+                                        {selectedEmotion.tips.map((tip, idx) => (
+                                            <div key={idx} style={{
+                                                background: 'white',
+                                                borderRadius: '15px',
+                                                padding: '15px 20px',
+                                                marginBottom: '10px',
+                                                fontSize: '18px',
+                                                color: '#555',
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                            }}>
+                                                ✓ {tip}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                        <button onClick={() => setView('breathing')} style={{
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            padding: '15px 30px',
+                                            fontSize: '18px',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 4px 10px rgba(102, 126, 234, 0.3)'
+                                        }}>
+                                            🧘 Respiration
+                                        </button>
+                                        <button onClick={() => setSelectedEmotion(null)} style={{
+                                            background: '#f0f0f0',
+                                            color: '#333',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            padding: '15px 30px',
+                                            fontSize: '18px',
+                                            cursor: 'pointer'
+                                        }}>
+                                            ← Changer d'émotion
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Exercices de concentration
+            if (view === 'concentration') {
+                const exercises = concentrationExercises[ageGroup] || [];
+                
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: ageGroup === 'young' ? '48px' : '40px',
+                            marginBottom: '20px'
+                        }}>
+                            Exercices de Concentration 🧠
+                        </h1>
+                        <p style={{
+                            textAlign: 'center',
+                            color: '#666',
+                            fontSize: '18px',
+                            marginBottom: '40px'
+                        }}>
+                            Choisis un exercice pour entraîner ton attention
+                        </p>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                            gap: '25px',
+                            maxWidth: '1100px',
+                            margin: '0 auto'
+                        }}>
+                            {exercises.map(exercise => (
+                                <div key={exercise.id} style={{
+                                    background: 'white',
+                                    borderRadius: '25px',
+                                    padding: '35px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    textAlign: 'center'
+                                }}>
+                                    <div style={{ fontSize: '70px', marginBottom: '15px' }}>
+                                        {exercise.icon}
+                                    </div>
+                                    <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '10px', fontWeight: 'bold' }}>
+                                        {exercise.name}
+                                    </h3>
+                                    <p style={{ fontSize: '16px', color: '#666', marginBottom: '15px' }}>
+                                        {exercise.description}
+                                    </p>
+                                    <div style={{
+                                        background: '#f0f0f0',
+                                        borderRadius: '10px',
+                                        padding: '10px',
+                                        fontSize: '16px',
+                                        color: '#555',
+                                        marginBottom: '20px'
+                                    }}>
+                                        ⏱️ {exercise.duration} minutes
+                                    </div>
+                                    <button onClick={() => {
+                                        setStars(prev => prev + 1);
+                                        alert(`🎉 Bravo ! Tu as terminé "${exercise.name}" !`);
+                                    }} style={{
+                                        background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '15px',
+                                        padding: '15px 30px',
+                                        fontSize: '18px',
+                                        cursor: 'pointer',
+                                        width: '100%',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 4px 10px rgba(17, 153, 142, 0.3)'
+                                    }}>
+                                        ✅ Commencer
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Exercices de respiration
+            if (view === 'breathing') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: ageGroup === 'young' ? '48px' : '40px',
+                            marginBottom: '20px'
+                        }}>
+                            Respiration & Relaxation 🧘
+                        </h1>
+                        <p style={{
+                            textAlign: 'center',
+                            color: '#666',
+                            fontSize: '18px',
+                            marginBottom: '40px'
+                        }}>
+                            Respire profondément pour te calmer et te détendre
+                        </p>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                            gap: '30px',
+                            maxWidth: '1100px',
+                            margin: '0 auto'
+                        }}>
+                            {breathingExercises.map(exercise => (
+                                <div key={exercise.id} style={{
+                                    background: 'white',
+                                    borderRadius: '25px',
+                                    padding: '40px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    textAlign: 'center'
+                                }}>
+                                    <div style={{ fontSize: '80px', marginBottom: '20px' }}>
+                                        {exercise.icon}
+                                    </div>
+                                    <h3 style={{ fontSize: '26px', color: '#333', marginBottom: '15px', fontWeight: 'bold' }}>
+                                        {exercise.name}
+                                    </h3>
+                                    <div style={{
+                                        background: '#f0f0f0',
+                                        borderRadius: '10px',
+                                        padding: '10px',
+                                        fontSize: '16px',
+                                        color: '#555',
+                                        marginBottom: '25px'
+                                    }}>
+                                        ⏱️ {exercise.duration} minutes
+                                    </div>
+                                    
+                                    <div style={{
+                                        textAlign: 'left',
+                                        marginBottom: '25px'
+                                    }}>
+                                        {exercise.steps.map((step, idx) => (
+                                            <div key={idx} style={{
+                                                background: '#f9f9f9',
+                                                borderRadius: '10px',
+                                                padding: '12px 15px',
+                                                marginBottom: '10px',
+                                                fontSize: '16px',
+                                                color: '#555'
+                                            }}>
+                                                {idx + 1}. {step}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <button onClick={() => {
+                                        setStars(prev => prev + 1);
+                                        alert(`🌟 Excellent ! Tu es maintenant plus calme et détendu.`);
+                                    }} style={{
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '15px',
+                                        padding: '15px 30px',
+                                        fontSize: '18px',
+                                        cursor: 'pointer',
+                                        width: '100%',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 4px 10px rgba(102, 126, 234, 0.3)'
+                                    }}>
+                                        🧘 Commencer
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Module d'apprentissage - Mini-jeux éducatifs
+            if (view === 'learning') {
+                const [selectedGame, setSelectedGame] = useState(null);
+                const [gameScore, setGameScore] = useState(0);
+                const [currentQuestion, setCurrentQuestion] = useState(0);
+                
+                const miniGames = {
+                    young: [
+                        { 
+                            id: 1, 
+                            name: 'Compte les objets', 
+                            icon: '🔢', 
+                            description: 'Compte combien il y a d\'objets',
+                            questions: [
+                                { question: 'Combien y a-t-il de 🍎 ?', items: '🍎🍎🍎', answer: 3, options: [2, 3, 4] },
+                                { question: 'Combien y a-t-il de ⭐ ?', items: '⭐⭐⭐⭐⭐', answer: 5, options: [4, 5, 6] },
+                                { question: 'Combien y a-t-il de 🐶 ?', items: '🐶🐶', answer: 2, options: [1, 2, 3] }
+                            ]
+                        },
+                        { 
+                            id: 2, 
+                            name: 'Trouve la couleur', 
+                            icon: '🎨', 
+                            description: 'Reconnais les couleurs',
+                            questions: [
+                                { question: 'De quelle couleur est 🍎 ?', answer: 'Rouge', options: ['Rouge', 'Bleu', 'Vert'] },
+                                { question: 'De quelle couleur est 🌞 ?', answer: 'Jaune', options: ['Jaune', 'Rouge', 'Bleu'] },
+                                { question: 'De quelle couleur est 🌳 ?', answer: 'Vert', options: ['Vert', 'Rouge', 'Jaune'] }
+                            ]
+                        },
+                        { 
+                            id: 3, 
+                            name: 'Les formes', 
+                            icon: '⬜', 
+                            description: 'Apprends les formes géométriques',
+                            questions: [
+                                { question: 'Quelle est cette forme ? ⭕', answer: 'Cercle', options: ['Cercle', 'Carré', 'Triangle'] },
+                                { question: 'Quelle est cette forme ? ⬜', answer: 'Carré', options: ['Carré', 'Cercle', 'Triangle'] },
+                                { question: 'Quelle est cette forme ? 🔺', answer: 'Triangle', options: ['Triangle', 'Carré', 'Cercle'] }
+                            ]
+                        }
+                    ],
+                    middle: [
+                        { 
+                            id: 1, 
+                            name: 'Tables de multiplication', 
+                            icon: '✖️', 
+                            description: 'Entraîne-toi aux multiplications',
+                            questions: [
+                                { question: '3 × 4 = ?', answer: 12, options: [10, 12, 14] },
+                                { question: '5 × 6 = ?', answer: 30, options: [28, 30, 32] },
+                                { question: '7 × 8 = ?', answer: 56, options: [54, 56, 58] },
+                                { question: '9 × 6 = ?', answer: 54, options: [52, 54, 56] },
+                                { question: '4 × 7 = ?', answer: 28, options: [26, 28, 30] }
+                            ]
+                        },
+                        { 
+                            id: 2, 
+                            name: 'Orthographe', 
+                            icon: '✏️', 
+                            description: 'Choisis la bonne orthographe',
+                            questions: [
+                                { question: 'Comment écrit-on ce mot ?', audio: '🏠', answer: 'Maison', options: ['Méson', 'Maison', 'Mezon'] },
+                                { question: 'Comment écrit-on ce mot ?', audio: '🐱', answer: 'Chat', options: ['Cha', 'Chat', 'Chât'] },
+                                { question: 'Comment écrit-on ce mot ?', audio: '🌺', answer: 'Fleur', options: ['Fleur', 'Fleure', 'Flœur'] }
+                            ]
+                        },
+                        { 
+                            id: 3, 
+                            name: 'Mémoire visuelle', 
+                            icon: '🧠', 
+                            description: 'Mémorise la séquence',
+                            questions: [
+                                { question: 'Quelle était la séquence ?', shown: '🍎🍊🍌', answer: '🍎🍊🍌', options: ['🍎🍊🍌', '🍊🍎🍌', '🍌🍊🍎'] },
+                                { question: 'Quelle était la séquence ?', shown: '⭐🌙☀️', answer: '⭐🌙☀️', options: ['⭐🌙☀️', '🌙⭐☀️', '☀️🌙⭐'] }
+                            ]
+                        }
+                    ],
+                    older: [
+                        { 
+                            id: 1, 
+                            name: 'Calcul mental', 
+                            icon: '🧮', 
+                            description: 'Résous rapidement',
+                            questions: [
+                                { question: '15 + 27 = ?', answer: 42, options: [40, 42, 44] },
+                                { question: '83 - 36 = ?', answer: 47, options: [45, 47, 49] },
+                                { question: '12 × 8 = ?', answer: 96, options: [94, 96, 98] },
+                                { question: '144 ÷ 12 = ?', answer: 12, options: [10, 12, 14] },
+                                { question: '25% de 80 = ?', answer: 20, options: [18, 20, 22] }
+                            ]
+                        },
+                        { 
+                            id: 2, 
+                            name: 'Vocabulaire', 
+                            icon: '📖', 
+                            description: 'Trouve le synonyme',
+                            questions: [
+                                { question: 'Synonyme de "rapide" ?', answer: 'Vite', options: ['Vite', 'Lent', 'Moyen'] },
+                                { question: 'Synonyme de "joyeux" ?', answer: 'Content', options: ['Content', 'Triste', 'Fatigué'] },
+                                { question: 'Synonyme de "commencer" ?', answer: 'Débuter', options: ['Débuter', 'Finir', 'Arrêter'] }
+                            ]
+                        },
+                        { 
+                            id: 3, 
+                            name: 'Logique', 
+                            icon: '🤔', 
+                            description: 'Suite logique',
+                            questions: [
+                                { question: '2, 4, 6, 8, ?', answer: 10, options: [9, 10, 11] },
+                                { question: '1, 4, 9, 16, ?', answer: 25, options: [20, 25, 30] },
+                                { question: '3, 6, 12, 24, ?', answer: 48, options: [36, 48, 52] }
+                            ]
+                        }
+                    ]
+                };
+
+                const games = miniGames[ageGroup] || [];
+
+                if (!selectedGame) {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            padding: '20px'
+                        }}>
+                            <button onClick={() => setView('child')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                ← Retour
+                            </button>
+
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: '#333',
+                                fontSize: ageGroup === 'young' ? '48px' : '40px',
+                                marginBottom: '20px'
+                            }}>
+                                Jeux Éducatifs 🎮
+                            </h1>
+                            <p style={{
+                                textAlign: 'center',
+                                color: '#666',
+                                fontSize: '18px',
+                                marginBottom: '40px'
+                            }}>
+                                {ageGroup === 'young' ? 'Apprends en t\'amusant !' : 'Choisis un jeu pour t\'entraîner'}
+                            </p>
+
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '25px',
+                                maxWidth: '1100px',
+                                margin: '0 auto'
+                            }}>
+                                {games.map(game => (
+                                    <button key={game.id} onClick={() => {
+                                        setSelectedGame(game);
+                                        setCurrentQuestion(0);
+                                        setGameScore(0);
+                                    }} style={{
+                                        background: 'white',
+                                        border: 'none',
+                                        borderRadius: '25px',
+                                        padding: '40px 30px',
+                                        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                        textAlign: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ fontSize: '70px', marginBottom: '15px' }}>
+                                            {game.icon}
+                                        </div>
+                                        <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '10px', fontWeight: 'bold' }}>
+                                            {game.name}
+                                        </h3>
+                                        <p style={{ fontSize: '16px', color: '#666', marginBottom: '15px' }}>
+                                            {game.description}
+                                        </p>
+                                        <div style={{
+                                            background: '#f0f0f0',
+                                            borderRadius: '10px',
+                                            padding: '8px',
+                                            fontSize: '14px',
+                                            color: '#555'
+                                        }}>
+                                            {game.questions.length} questions
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                } else {
+                    // Jeu en cours
+                    const question = selectedGame.questions[currentQuestion];
+                    const isComplete = currentQuestion >= selectedGame.questions.length;
+
+                    if (isComplete) {
+                        return (
+                            <div style={{
+                                minHeight: '100vh',
+                                background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '20px'
+                            }}>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '30px',
+                                    padding: '60px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                    maxWidth: '600px'
+                                }}>
+                                    <div style={{ fontSize: '100px', marginBottom: '20px' }}>
+                                        {gameScore === selectedGame.questions.length ? '🏆' : gameScore > selectedGame.questions.length / 2 ? '🌟' : '💪'}
+                                    </div>
+                                    <h2 style={{ fontSize: '36px', color: '#333', marginBottom: '20px' }}>
+                                        {gameScore === selectedGame.questions.length ? 'Parfait !' : gameScore > selectedGame.questions.length / 2 ? 'Bien joué !' : 'Continue comme ça !'}
+                                    </h2>
+                                    <p style={{ fontSize: '24px', color: '#666', marginBottom: '40px' }}>
+                                        Score : {gameScore}/{selectedGame.questions.length}
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                                        <button onClick={() => {
+                                            setSelectedGame(null);
+                                            setStars(prev => prev + gameScore);
+                                        }} style={{
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            padding: '15px 30px',
+                                            fontSize: '18px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Choisir un autre jeu
+                                        </button>
+                                        <button onClick={() => {
+                                            setCurrentQuestion(0);
+                                            setGameScore(0);
+                                        }} style={{
+                                            background: '#f0f0f0',
+                                            color: '#333',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            padding: '15px 30px',
+                                            fontSize: '18px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Rejouer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '20px'
+                            }}>
+                                <button onClick={() => setSelectedGame(null)} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 25px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    ← Quitter
+                                </button>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '15px',
+                                    padding: '15px 25px',
+                                    fontSize: '20px',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    Question {currentQuestion + 1}/{selectedGame.questions.length}
+                                </div>
+                            </div>
+
+                            <div style={{
+                                flex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '30px',
+                                    padding: '50px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                                    maxWidth: '700px',
+                                    width: '100%'
+                                }}>
+                                    {question.items && (
+                                        <div style={{ fontSize: '60px', marginBottom: '20px' }}>
+                                            {question.items}
+                                        </div>
+                                    )}
+                                    {question.shown && (
+                                        <div style={{ fontSize: '60px', marginBottom: '20px', color: '#ccc' }}>
+                                            (Mémorise : {question.shown})
+                                        </div>
+                                    )}
+                                    {question.audio && (
+                                        <div style={{ fontSize: '80px', marginBottom: '20px' }}>
+                                            {question.audio}
+                                        </div>
+                                    )}
+                                    
+                                    <h2 style={{ fontSize: '32px', color: '#333', marginBottom: '40px' }}>
+                                        {question.question}
+                                    </h2>
+
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: ageGroup === 'young' ? '1fr' : 'repeat(auto-fit, minmax(150px, 1fr))',
+                                        gap: '15px'
+                                    }}>
+                                        {question.options.map((option, idx) => (
+                                            <button key={idx} onClick={() => {
+                                                if (option === question.answer) {
+                                                    setGameScore(prev => prev + 1);
+                                                    alert('✅ Bravo ! Bonne réponse !');
+                                                } else {
+                                                    alert('❌ Pas tout à fait... Essaie encore !');
+                                                }
+                                                setTimeout(() => setCurrentQuestion(prev => prev + 1), 500);
+                                            }} style={{
+                                                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '15px',
+                                                padding: ageGroup === 'young' ? '25px' : '20px',
+                                                fontSize: ageGroup === 'young' ? '28px' : '22px',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 4px 10px rgba(79, 172, 254, 0.3)',
+                                                transition: 'transform 0.2s'
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                            >
+                                                {option}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+
+            // Timer visuel
+            if (view === 'timerVisual') {
+                const timerMinutes = Math.floor(timerSeconds / 60);
+                const timerSecondsDisplay = timerSeconds % 60;
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        padding: '20px',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        <button onClick={() => {
+                            setIsTimerRunning(false);
+                            setTimerSeconds(0);
+                            setView('child');
+                        }} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px',
+                            alignSelf: 'flex-start'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                maxWidth: '600px',
+                                width: '100%'
+                            }}>
+                                <h2 style={{ fontSize: '36px', color: '#333', marginBottom: '30px' }}>
+                                    ⏱️ Mon Timer
+                                </h2>
+
+                                <div style={{
+                                    fontSize: '80px',
+                                    fontWeight: 'bold',
+                                    color: isTimerRunning ? '#4caf50' : timerSeconds === 0 ? '#667eea' : '#f5576c',
+                                    marginBottom: '40px',
+                                    fontFamily: 'monospace'
+                                }}>
+                                    {String(timerMinutes).padStart(2, '0')}:{String(timerSecondsDisplay).padStart(2, '0')}
+                                </div>
+
+                                {!isTimerRunning && timerSeconds === 0 ? (
+                                    <>
+                                        <div style={{ marginBottom: '30px' }}>
+                                            <p style={{ fontSize: '18px', color: '#666', marginBottom: '15px' }}>
+                                                Choisis la durée :
+                                            </p>
+                                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                                {[5, 10, 15, 25].map(min => (
+                                                    <button key={min} onClick={() => {
+                                                        setTimerSeconds(min * 60);
+                                                    }} style={{
+                                                        background: '#667eea',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        borderRadius: '10px',
+                                                        padding: '12px 20px',
+                                                        fontSize: '16px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 'bold'
+                                                    }}>
+                                                        {min} min
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : !isTimerRunning && timerSeconds > 0 ? (
+                                    <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                                        <button onClick={() => {
+                                            setIsTimerRunning(true);
+                                        }} style={{
+                                            background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '20px',
+                                            padding: '20px 40px',
+                                            fontSize: '24px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold',
+                                            boxShadow: '0 8px 20px rgba(17, 153, 142, 0.4)'
+                                        }}>
+                                            ▶️ Démarrer
+                                        </button>
+                                        <button onClick={() => {
+                                            setTimerSeconds(0);
+                                        }} style={{
+                                            background: '#f0f0f0',
+                                            color: '#333',
+                                            border: 'none',
+                                            borderRadius: '20px',
+                                            padding: '20px 40px',
+                                            fontSize: '24px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            ↺ Réinitialiser
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => {
+                                        setIsTimerRunning(false);
+                                    }} style={{
+                                        background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '20px',
+                                        padding: '20px 50px',
+                                        fontSize: '24px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 8px 20px rgba(240, 147, 251, 0.4)'
+                                    }}>
+                                        ⏸️ Pause
+                                    </button>
+                                )}
+
+                                {timerSeconds === 0 && !isTimerRunning && (
+                                    <div style={{
+                                        marginTop: '30px',
+                                        fontSize: '48px',
+                                        animation: 'bounce 1s infinite'
+                                    }}>
+                                        🎉
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Journal des émotions
+            if (view === 'emotionJournal') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: ageGroup === 'young' ? '48px' : '40px',
+                            marginBottom: '20px'
+                        }}>
+                            Mon Journal d'Émotions 📊
+                        </h1>
+                        <p style={{
+                            textAlign: 'center',
+                            color: '#666',
+                            fontSize: '18px',
+                            marginBottom: '40px'
+                        }}>
+                            Voici l'historique de tes émotions
+                        </p>
+
+                        {emotionHistory.length === 0 ? (
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '25px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                maxWidth: '600px',
+                                margin: '0 auto',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                            }}>
+                                <div style={{ fontSize: '80px', marginBottom: '20px' }}>😊</div>
+                                <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '15px' }}>
+                                    Commence ton journal !
+                                </h3>
+                                <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
+                                    Va dans "Mes Émotions" pour enregistrer comment tu te sens
+                                </p>
+                                <button onClick={() => setView('emotions')} style={{
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 30px',
+                                    fontSize: '18px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 10px rgba(240, 147, 251, 0.3)'
+                                }}>
+                                    Enregistrer une émotion
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{
+                                maxWidth: '900px',
+                                margin: '0 auto'
+                            }}>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '20px',
+                                    padding: '30px',
+                                    marginBottom: '30px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                                }}>
+                                    <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '20px' }}>
+                                        📊 Résumé
+                                    </h3>
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '15px',
+                                        flexWrap: 'wrap',
+                                        justifyContent: 'center'
+                                    }}>
+                                        {emotions.map(emotion => {
+                                            const count = emotionHistory.filter(e => e.emotion.id === emotion.id).length;
+                                            if (count === 0) return null;
+                                            return (
+                                                <div key={emotion.id} style={{
+                                                    background: '#f9f9f9',
+                                                    borderRadius: '15px',
+                                                    padding: '15px 20px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    border: `2px solid ${emotion.color}`
+                                                }}>
+                                                    <span style={{ fontSize: '32px' }}>{emotion.icon}</span>
+                                                    <div>
+                                                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#333' }}>
+                                                            {emotion.name}
+                                                        </div>
+                                                        <div style={{ fontSize: '14px', color: '#666' }}>
+                                                            {count} fois
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '20px',
+                                    padding: '30px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                                }}>
+                                    <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '20px' }}>
+                                        📅 Historique
+                                    </h3>
+                                    <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                                        {emotionHistory.map((entry, idx) => (
+                                            <div key={idx} style={{
+                                                background: '#f9f9f9',
+                                                borderRadius: '15px',
+                                                padding: '20px',
+                                                marginBottom: '15px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '20px',
+                                                borderLeft: `5px solid ${entry.emotion.color}`
+                                            }}>
+                                                <div style={{ fontSize: '48px' }}>
+                                                    {entry.emotion.icon}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+                                                        {entry.emotion.name}
+                                                    </div>
+                                                    <div style={{ fontSize: '14px', color: '#666' }}>
+                                                        {entry.date} à {entry.time}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Messages parent-enfant
+            if (view === 'messages') {
+                const [newMessage, setNewMessage] = useState('');
+                const unreadCount = messages.filter(m => !m.read && m.from === 'parent').length;
+
+                // Marquer les messages comme lus
+                React.useEffect(() => {
+                    setMessages(prev => prev.map(m => ({ ...m, read: true })));
+                }, []);
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <div style={{
+                            maxWidth: '800px',
+                            margin: '0 auto'
+                        }}>
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: '#333',
+                                fontSize: ageGroup === 'young' ? '48px' : '40px',
+                                marginBottom: '40px'
+                            }}>
+                                💬 Mes Messages
+                            </h1>
+
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '25px',
+                                padding: '30px',
+                                marginBottom: '20px',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                maxHeight: '500px',
+                                overflowY: 'auto'
+                            }}>
+                                {messages.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                                        Aucun message pour le moment
+                                    </div>
+                                ) : (
+                                    messages.map(msg => (
+                                        <div key={msg.id} style={{
+                                            background: msg.from === 'parent' ? '#e3f2fd' : '#f1f8e9',
+                                            borderRadius: '15px',
+                                            padding: '20px',
+                                            marginBottom: '15px',
+                                            borderLeft: `5px solid ${msg.from === 'parent' ? '#2196f3' : '#8bc34a'}`
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: '10px'
+                                            }}>
+                                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+                                                    {msg.from === 'parent' ? '👨‍👩‍👧 Papa/Maman' : '👦 Moi'}
+                                                </div>
+                                                <div style={{ fontSize: '14px', color: '#666' }}>
+                                                    {msg.time}
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '18px', color: '#555', lineHeight: '1.5' }}>
+                                                {msg.text}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '25px',
+                                padding: '25px',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                            }}>
+                                <h3 style={{ fontSize: '20px', color: '#333', marginBottom: '15px' }}>
+                                    ✉️ Envoyer un message
+                                </h3>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        placeholder={ageGroup === 'young' ? 'Écris ton message...' : 'Tape ton message ici...'}
+                                        style={{
+                                            flex: 1,
+                                            padding: '15px 20px',
+                                            fontSize: '18px',
+                                            border: '2px solid #ddd',
+                                            borderRadius: '15px',
+                                            outline: 'none'
+                                        }}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && newMessage.trim()) {
+                                                sendMessage(newMessage);
+                                                setNewMessage('');
+                                            }
+                                        }}
+                                    />
+                                    <button onClick={() => {
+                                        if (newMessage.trim()) {
+                                            sendMessage(newMessage);
+                                            setNewMessage('');
+                                            alert('💬 Message envoyé !');
+                                        }
+                                    }} style={{
+                                        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '15px',
+                                        padding: '15px 30px',
+                                        fontSize: '20px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 4px 10px rgba(79, 172, 254, 0.3)'
+                                    }}>
+                                        Envoyer
+                                    </button>
+                                </div>
+                                {ageGroup === 'young' && (
+                                    <div style={{
+                                        marginTop: '15px',
+                                        display: 'flex',
+                                        gap: '10px',
+                                        flexWrap: 'wrap'
+                                    }}>
+                                        {['Merci ! ❤️', 'Je t\'aime 💕', 'Aide-moi 🆘', 'J\'ai fini ! ✅'].map(quick => (
+                                            <button key={quick} onClick={() => {
+                                                sendMessage(quick);
+                                                alert('💬 Message envoyé !');
+                                            }} style={{
+                                                background: '#f0f0f0',
+                                                color: '#333',
+                                                border: 'none',
+                                                borderRadius: '10px',
+                                                padding: '10px 15px',
+                                                fontSize: '16px',
+                                                cursor: 'pointer'
+                                            }}>
+                                                {quick}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Écran de routine
+            if (view === 'routine' && selectedRoutine) {
+                const step = selectedRoutine.steps[currentStep];
+                const progress = ((currentStep + 1) / selectedRoutine.steps.length) * 100;
+                
+                // Styles adaptatifs
+                const getRoutineStyles = () => {
+                    if (ageGroup === 'young') {
+                        return {
+                            background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            iconSize: '150px',
+                            nameSize: '42px',
+                            buttonSize: '32px',
+                            buttonPadding: '25px 60px'
+                        };
+                    } else if (ageGroup === 'middle') {
+                        return {
+                            background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+                            iconSize: '120px',
+                            nameSize: '36px',
+                            buttonSize: '28px',
+                            buttonPadding: '20px 50px'
+                        };
+                    } else {
+                        return {
+                            background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                            iconSize: '100px',
+                            nameSize: '32px',
+                            buttonSize: '24px',
+                            buttonPadding: '18px 45px'
+                        };
+                    }
+                };
+
+                const routineStyles = getRoutineStyles();
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: routineStyles.background,
+                        padding: '20px',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '20px'
+                        }}>
+                            <button onClick={() => setView('routinesList')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                ← Retour
+                            </button>
+                            
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '20px',
+                                padding: '15px 30px',
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                Étape {currentStep + 1}/{selectedRoutine.steps.length}
+                            </div>
+                        </div>
+
+                        {/* Barre de progression */}
+                        <div style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            padding: '10px',
+                            marginBottom: '40px',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                        }}>
+                            <div style={{
+                                background: 'linear-gradient(90deg, #11998e 0%, #38ef7d 100%)',
+                                height: '20px',
+                                borderRadius: '10px',
+                                width: `${progress}%`,
+                                transition: 'width 0.5s ease'
+                            }}></div>
+                        </div>
+
+                        {/* Vue d'ensemble des étapes (pour 10-12 ans) */}
+                        {ageGroup === 'older' && (
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '20px',
+                                padding: '20px',
+                                marginBottom: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                display: 'flex',
+                                gap: '10px',
+                                overflowX: 'auto'
+                            }}>
+                                {selectedRoutine.steps.map((s, idx) => (
+                                    <div key={s.id} style={{
+                                        minWidth: '80px',
+                                        textAlign: 'center',
+                                        padding: '10px',
+                                        borderRadius: '10px',
+                                        background: idx === currentStep ? '#e8f5e9' : 
+                                                   s.completed ? '#c8e6c9' : '#f5f5f5',
+                                        border: `2px solid ${idx === currentStep ? '#4caf50' : 
+                                                            s.completed ? '#81c784' : '#ddd'}`,
+                                        fontSize: '12px'
+                                    }}>
+                                        <div style={{ fontSize: '24px', marginBottom: '5px' }}>{s.icon}</div>
+                                        <div style={{ fontWeight: idx === currentStep ? 'bold' : 'normal' }}>
+                                            {idx + 1}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Étape actuelle */}
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <div className="fade-in" style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: ageGroup === 'young' ? '60px' : '50px',
+                                textAlign: 'center',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                                maxWidth: '600px',
+                                width: '100%'
+                            }}>
+                                <div style={{ fontSize: routineStyles.iconSize, marginBottom: '30px' }}>
+                                    {step.icon}
+                                </div>
+                                
+                                <h2 style={{
+                                    fontSize: routineStyles.nameSize,
+                                    color: '#333',
+                                    marginBottom: '30px',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {step.name}
+                                </h2>
+
+                                {step.duration > 0 && (
+                                    <div style={{
+                                        background: '#f0f0f0',
+                                        borderRadius: '15px',
+                                        padding: '15px',
+                                        marginBottom: '30px',
+                                        fontSize: ageGroup === 'young' ? '24px' : '20px',
+                                        color: '#666'
+                                    }}>
+                                        ⏱️ {step.duration} minute{step.duration > 1 ? 's' : ''}
+                                        {ageGroup === 'older' && ` environ`}
+                                    </div>
+                                )}
+
+                                {/* Bouton timer pour 10-12 ans */}
+                                {ageGroup === 'older' && step.duration > 0 && !step.completed && (
+                                    <button onClick={() => {
+                                        setTimerSeconds(step.duration * 60);
+                                        setIsTimerRunning(true);
+                                    }} style={{
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '15px',
+                                        padding: '15px 30px',
+                                        fontSize: '18px',
+                                        cursor: 'pointer',
+                                        marginBottom: '20px',
+                                        boxShadow: '0 4px 10px rgba(102, 126, 234, 0.3)'
+                                    }}>
+                                        ⏰ Lancer le chrono
+                                    </button>
+                                )}
+
+                                {isTimerRunning && timerSeconds > 0 && (
+                                    <div style={{
+                                        fontSize: '48px',
+                                        color: '#667eea',
+                                        fontWeight: 'bold',
+                                        marginBottom: '20px'
+                                    }}>
+                                        {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
+                                    </div>
+                                )}
+
+                                {step.completed ? (
+                                    <div style={{
+                                        fontSize: '64px',
+                                        animation: 'pulse 1s infinite'
+                                    }}>
+                                        ✅
+                                    </div>
+                                ) : (
+                                    <button onClick={completeStep} style={{
+                                        background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '25px',
+                                        padding: routineStyles.buttonPadding,
+                                        fontSize: routineStyles.buttonSize,
+                                        cursor: 'pointer',
+                                        boxShadow: '0 8px 20px rgba(17, 153, 142, 0.4)',
+                                        transition: 'transform 0.2s',
+                                        fontWeight: 'bold'
+                                    }}
+                                    onMouseOver={(e) => e.target.style.transform = 'scale(1.1)'}
+                                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                                    >
+                                        ✅ {ageGroup === 'young' ? "C'est fait !" : ageGroup === 'middle' ? "Terminé !" : "Valider"}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Interface parent (tableau de bord)
+            if (view === 'parent') {
+                const getAgeLabel = () => {
+                    if (ageGroup === 'young') return '3-6 ans (Maternelle)';
+                    if (ageGroup === 'middle') return '7-9 ans (Primaire)';
+                    if (ageGroup === 'older') return '10-12 ans (Collège)';
+                    return 'Non défini';
+                };
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: '#f5f5f5',
+                        padding: '20px'
+                    }}>
+                        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                            {/* Header */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '15px',
+                                padding: '30px',
+                                marginBottom: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <div>
+                                    <h1 style={{ color: '#333', fontSize: '32px', marginBottom: '10px' }}>
+                                        Tableau de Bord Parent
+                                    </h1>
+                                    <p style={{ color: '#666', fontSize: '16px' }}>
+                                        Gérez les routines et suivez les progrès de votre enfant
+                                    </p>
+                                </div>
+                                <button onClick={() => setView('home')} style={{
+                                    background: '#667eea',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '15px 30px',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 10px rgba(102, 126, 234, 0.3)'
+                                }}>
+                                    🏠 Retour Accueil
+                                </button>
+                            </div>
+
+                            {/* Paramètre d'âge */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '15px',
+                                padding: '25px',
+                                marginBottom: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <div>
+                                    <h3 style={{ fontSize: '20px', color: '#333', marginBottom: '5px' }}>
+                                        👤 Groupe d'âge actuel
+                                    </h3>
+                                    <p style={{ fontSize: '16px', color: '#666' }}>
+                                        {getAgeLabel()}
+                                    </p>
+                                </div>
+                                <button onClick={() => {
+                                    setView('ageSelect');
+                                }} style={{
+                                    background: '#4facfe',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '12px 25px',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 10px rgba(79, 172, 254, 0.3)'
+                                }}>
+                                    Modifier l'âge
+                                </button>
+                            </div>
+
+                            {/* Statistiques */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                                gap: '20px',
+                                marginBottom: '30px'
+                            }}>
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    borderRadius: '15px',
+                                    padding: '30px',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>⭐</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '5px' }}>
+                                        {stars}
+                                    </div>
+                                    <div style={{ fontSize: '16px', opacity: 0.9 }}>Étoiles gagnées</div>
+                                </div>
+
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                    color: 'white',
+                                    borderRadius: '15px',
+                                    padding: '30px',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>📋</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '5px' }}>
+                                        {routines.length}
+                                    </div>
+                                    <div style={{ fontSize: '16px', opacity: 0.9 }}>Routines actives</div>
+                                </div>
+
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                    color: 'white',
+                                    borderRadius: '15px',
+                                    padding: '30px',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>✅</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '5px' }}>
+                                        {routines.reduce((acc, r) => acc + r.steps.filter(s => s.completed).length, 0)}
+                                    </div>
+                                    <div style={{ fontSize: '16px', opacity: 0.9 }}>Étapes complétées</div>
+                                </div>
+                            </div>
+
+                            {/* Liste des routines */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '15px',
+                                padding: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '20px'
+                                }}>
+                                    <h2 style={{ color: '#333', fontSize: '24px' }}>
+                                        🔔 Planification des Routines
+                                    </h2>
+                                </div>
+
+                                {scheduledRoutines.map(schedule => {
+                                    const routine = routines.find(r => r.id === schedule.routineId);
+                                    if (!routine) return null;
+                                    
+                                    return (
+                                        <div key={schedule.id} style={{
+                                            background: '#f9f9f9',
+                                            borderRadius: '10px',
+                                            padding: '20px',
+                                            marginBottom: '15px'
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
+                                                    <span style={{ fontSize: '32px' }}>{routine.icon}</span>
+                                                    <div>
+                                                        <h3 style={{ fontSize: '18px', color: '#333', marginBottom: '5px' }}>
+                                                            {routine.name}
+                                                        </h3>
+                                                        <div style={{ fontSize: '14px', color: '#666' }}>
+                                                            ⏰ {schedule.time} · {schedule.days.join(', ')}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => {
+                                                    setScheduledRoutines(prev => 
+                                                        prev.map(s => s.id === schedule.id 
+                                                            ? { ...s, enabled: !s.enabled } 
+                                                            : s
+                                                        )
+                                                    );
+                                                }} style={{
+                                                    background: schedule.enabled ? '#4caf50' : '#9e9e9e',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '20px',
+                                                    padding: '8px 20px',
+                                                    fontSize: '14px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    {schedule.enabled ? '✓ Activé' : 'Désactivé'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Journal des émotions */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '15px',
+                                padding: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '20px' }}>
+                                    📊 Journal des Émotions (Dernières 5)
+                                </h2>
+
+                                {emotionHistory.length === 0 ? (
+                                    <div style={{
+                                        textAlign: 'center',
+                                        padding: '30px',
+                                        color: '#999',
+                                        fontSize: '16px'
+                                    }}>
+                                        Aucune émotion enregistrée pour le moment
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div style={{
+                                            display: 'flex',
+                                            gap: '10px',
+                                            marginBottom: '20px',
+                                            flexWrap: 'wrap'
+                                        }}>
+                                            {emotions.map(emotion => {
+                                                const count = emotionHistory.filter(e => e.emotion.id === emotion.id).length;
+                                                if (count === 0) return null;
+                                                return (
+                                                    <div key={emotion.id} style={{
+                                                        background: '#f9f9f9',
+                                                        border: `2px solid ${emotion.color}`,
+                                                        borderRadius: '10px',
+                                                        padding: '8px 12px',
+                                                        fontSize: '14px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px'
+                                                    }}>
+                                                        <span style={{ fontSize: '20px' }}>{emotion.icon}</span>
+                                                        <span>{count}x</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        
+                                        {emotionHistory.slice(0, 5).map((entry, idx) => (
+                                            <div key={idx} style={{
+                                                background: '#f9f9f9',
+                                                borderRadius: '10px',
+                                                padding: '15px',
+                                                marginBottom: '10px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '15px',
+                                                borderLeft: `4px solid ${entry.emotion.color}`
+                                            }}>
+                                                <span style={{ fontSize: '32px' }}>{entry.emotion.icon}</span>
+                                                <div>
+                                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#333' }}>
+                                                        {entry.emotion.name}
+                                                    </div>
+                                                    <div style={{ fontSize: '13px', color: '#666' }}>
+                                                        {entry.date} à {entry.time}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Messages */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '15px',
+                                padding: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '20px'
+                                }}>
+                                    <h2 style={{ color: '#333', fontSize: '24px' }}>
+                                        💬 Messages
+                                    </h2>
+                                    <button onClick={() => {
+                                        const msg = prompt('Envoyer un message à votre enfant :');
+                                        if (msg && msg.trim()) {
+                                            setMessages(prev => [{
+                                                id: Date.now(),
+                                                from: 'parent',
+                                                text: msg.trim(),
+                                                time: 'À l\'instant',
+                                                read: false
+                                            }, ...prev]);
+                                        }
+                                    }} style={{
+                                        background: '#4facfe',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        padding: '10px 20px',
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        ✉️ Nouveau message
+                                    </button>
+                                </div>
+
+                                {messages.length === 0 ? (
+                                    <div style={{
+                                        textAlign: 'center',
+                                        padding: '30px',
+                                        color: '#999',
+                                        fontSize: '16px'
+                                    }}>
+                                        Aucun message échangé
+                                    </div>
+                                ) : (
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        {messages.slice(0, 5).map(msg => (
+                                            <div key={msg.id} style={{
+                                                background: msg.from === 'parent' ? '#e3f2fd' : '#f1f8e9',
+                                                borderRadius: '10px',
+                                                padding: '15px',
+                                                marginBottom: '10px',
+                                                borderLeft: `4px solid ${msg.from === 'parent' ? '#2196f3' : '#8bc34a'}`
+                                            }}>
+                                                <div style={{
+                                                    fontSize: '13px',
+                                                    color: '#666',
+                                                    marginBottom: '5px'
+                                                }}>
+                                                    {msg.from === 'parent' ? 'Vous' : 'Enfant'} · {msg.time}
+                                                </div>
+                                                <div style={{ fontSize: '15px', color: '#555' }}>
+                                                    {msg.text}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Gestion des routines */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '15px',
+                                padding: '30px',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '20px' }}>
+                                    Gestion des Routines
+                                </h2>
+
+                                {routines.length === 0 ? (
+                                    <div style={{
+                                        textAlign: 'center',
+                                        padding: '40px',
+                                        color: '#999',
+                                        fontSize: '18px'
+                                    }}>
+                                        Aucune routine configurée. Sélectionnez d'abord un groupe d'âge.
+                                    </div>
+                                ) : (
+                                    routines.map(routine => (
+                                        <div key={routine.id} style={{
+                                            background: '#f9f9f9',
+                                            borderRadius: '10px',
+                                            padding: '20px',
+                                            marginBottom: '15px'
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: '15px'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                    <span style={{ fontSize: '32px' }}>{routine.icon}</span>
+                                                    <div>
+                                                        <h3 style={{ fontSize: '20px', color: '#333', marginBottom: '5px' }}>
+                                                            {routine.name}
+                                                        </h3>
+                                                        <p style={{ color: '#666', fontSize: '14px' }}>
+                                                            {routine.steps.length} étapes · 
+                                                            {routine.steps.filter(s => s.completed).length} complétées
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button style={{
+                                                    background: '#667eea',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '8px',
+                                                    padding: '10px 20px',
+                                                    fontSize: '14px',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                    ✏️ Modifier
+                                                </button>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                {routine.steps.map(step => (
+                                                    <div key={step.id} style={{
+                                                        background: step.completed ? '#e8f5e9' : 'white',
+                                                        border: `2px solid ${step.completed ? '#4caf50' : '#ddd'}`,
+                                                        borderRadius: '8px',
+                                                        padding: '10px 15px',
+                                                        fontSize: '14px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px'
+                                                    }}>
+                                                        <span>{step.icon}</span>
+                                                        <span>{step.name}</span>
+                                                        {step.completed && <span>✓</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+
+                                <button style={{
+                                    background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '15px 30px',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    width: '100%',
+                                    marginTop: '20px',
+                                    boxShadow: '0 4px 10px rgba(17, 153, 142, 0.3)',
+                                    fontWeight: 'bold'
+                                }}>
+                                    ➕ Créer une nouvelle routine
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <!-- Service Worker pour PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>
