@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Application d'aide pour enfants autistes et TDAH - Routines, émotions, concentration">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mon Compagnon">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🌈</text></svg>">
+    <title>Mon Compagnon - App pour enfants autistes/TDAH</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        button {
+            font-family: inherit;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Données de routines
+        function getRoutinesByAge(age) {
+            const routines = {
+                young: [
+                    {
+                        id: 1,
+                        name: 'Routine du Matin',
+                        icon: '🌅',
+                        steps: [
+                            { id: 1, text: 'Se réveiller', icon: '😊', done: false },
+                            { id: 2, text: 'S\'habiller', icon: '👕', done: false },
+                            { id: 3, text: 'Petit-déjeuner', icon: '🥣', done: false },
+                            { id: 4, text: 'Se laver les dents', icon: '🪥', done: false }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'Routine du Soir',
+                        icon: '🌙',
+                        steps: [
+                            { id: 1, text: 'Ranger les jouets', icon: '🧸', done: false },
+                            { id: 2, text: 'Prendre le bain', icon: '🛁', done: false },
+                            { id: 3, text: 'Mettre le pyjama', icon: '👘', done: false },
+                            { id: 4, text: 'Se laver les dents', icon: '🪥', done: false },
+                            { id: 5, text: 'Histoire du soir', icon: '📖', done: false }
+                        ]
+                    }
+                ],
+                middle: [
+                    {
+                        id: 1,
+                        name: 'Routine du Matin',
+                        icon: '🌅',
+                        steps: [
+                            { id: 1, text: 'Se réveiller', icon: '⏰', done: false },
+                            { id: 2, text: 'S\'habiller', icon: '👕', done: false },
+                            { id: 3, text: 'Petit-déjeuner', icon: '🥐', done: false },
+                            { id: 4, text: 'Se laver les dents', icon: '🪥', done: false },
+                            { id: 5, text: 'Préparer le cartable', icon: '🎒', done: false }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'Routine des Devoirs',
+                        icon: '📚',
+                        steps: [
+                            { id: 1, text: 'Préparer l\'espace', icon: '🪑', done: false },
+                            { id: 2, text: 'Sortir l\'agenda', icon: '📓', done: false },
+                            { id: 3, text: 'Commencer les devoirs', icon: '✏️', done: false },
+                            { id: 4, text: 'Faire une pause', icon: '⏸️', done: false },
+                            { id: 5, text: 'Terminer les devoirs', icon: '✅', done: false }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: 'Routine du Soir',
+                        icon: '🌙',
+                        steps: [
+                            { id: 1, text: 'Ranger la chambre', icon: '🧹', done: false },
+                            { id: 2, text: 'Prendre la douche', icon: '🚿', done: false },
+                            { id: 3, text: 'Mettre le pyjama', icon: '👘', done: false },
+                            { id: 4, text: 'Se laver les dents', icon: '🪥', done: false },
+                            { id: 5, text: 'Lire un livre', icon: '📚', done: false }
+                        ]
+                    }
+                ],
+                older: [
+                    {
+                        id: 1,
+                        name: 'Routine du Matin',
+                        icon: '🌅',
+                        steps: [
+                            { id: 1, text: 'Réveil', icon: '⏰', done: false },
+                            { id: 2, text: 'Douche', icon: '🚿', done: false },
+                            { id: 3, text: 'S\'habiller', icon: '👔', done: false },
+                            { id: 4, text: 'Petit-déjeuner', icon: '🥐', done: false },
+                            { id: 5, text: 'Hygiène dentaire', icon: '🪥', done: false },
+                            { id: 6, text: 'Préparer le sac', icon: '🎒', done: false }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'Session Devoirs (Pomodoro)',
+                        icon: '📚',
+                        steps: [
+                            { id: 1, text: 'Installer l\'espace de travail', icon: '🪑', done: false },
+                            { id: 2, text: 'Lister les tâches', icon: '📋', done: false },
+                            { id: 3, text: 'Focus 25min', icon: '🍅', done: false },
+                            { id: 4, text: 'Pause 5min', icon: '⏸️', done: false },
+                            { id: 5, text: 'Focus 25min', icon: '🍅', done: false },
+                            { id: 6, text: 'Pause longue 15min', icon: '☕', done: false },
+                            { id: 7, text: 'Finaliser et ranger', icon: '✅', done: false }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: 'Gestion du Stress',
+                        icon: '🧘',
+                        steps: [
+                            { id: 1, text: 'Identifier la source', icon: '🔍', done: false },
+                            { id: 2, text: 'Respiration profonde', icon: '🌬️', done: false },
+                            { id: 3, text: 'Exercice physique léger', icon: '🏃', done: false },
+                            { id: 4, text: 'Évaluer la situation', icon: '💭', done: false }
+                        ]
+                    },
+                    {
+                        id: 4,
+                        name: 'Routine du Soir',
+                        icon: '🌙',
+                        steps: [
+                            { id: 1, text: 'Ranger chambre et bureau', icon: '🧹', done: false },
+                            { id: 2, text: 'Préparer affaires du lendemain', icon: '🎒', done: false },
+                            { id: 3, text: 'Douche', icon: '🚿', done: false },
+                            { id: 4, text: 'Hygiène dentaire', icon: '🪥', done: false },
+                            { id: 5, text: 'Temps calme (lecture/musique)', icon: '📖', done: false },
+                            { id: 6, text: 'Coucher à heure fixe', icon: '😴', done: false }
+                        ]
+                    }
+                ]
+            };
+            return routines[age] || [];
+        }
+
+        // Émotions
+        const emotions = [
+            { id: 1, name: 'Joyeux', icon: '😊', color: '#4caf50', tips: ['Profite de ce moment !', 'Partage ta joie avec les autres', 'Fais quelque chose que tu aimes'] },
+            { id: 2, name: 'Triste', icon: '😢', color: '#2196f3', tips: ['C\'est normal de se sentir triste', 'Parle à quelqu\'un', 'Fais une activité que tu aimes'] },
+            { id: 3, name: 'En colère', icon: '😠', color: '#f44336', tips: ['Respire profondément', 'Compte jusqu\'à 10', 'Éloigne-toi un moment'] },
+            { id: 4, name: 'Anxieux', icon: '😰', color: '#ff9800', tips: ['Respire calmement', 'Parle de ce qui t\'inquiète', 'Concentre-toi sur le présent'] },
+            { id: 5, name: 'Calme', icon: '😌', color: '#9c27b0', tips: ['Profite de ce calme', 'Fais une activité relaxante', 'Savoure ce moment'] },
+            { id: 6, name: 'Fatigué', icon: '😴', color: '#607d8b', tips: ['Prends une pause', 'Repose-toi un moment', 'Bois de l\'eau'] }
+        ];
+
+        // Exercices de concentration
+        const concentrationExercises = {
+            young: [
+                { id: 1, name: 'Trouve les différences', icon: '🔍', duration: '5 min', description: 'Observe deux images et trouve ce qui change' },
+                { id: 2, name: 'Jeu des couleurs', icon: '🎨', duration: '3 min', description: 'Trie les objets par couleur' },
+                { id: 3, name: 'Écoute attentive', icon: '👂', duration: '2 min', description: 'Ferme les yeux et écoute les sons' }
+            ],
+            middle: [
+                { id: 1, name: 'Memory visuel', icon: '🧠', duration: '10 min', description: 'Retrouve les paires d\'images' },
+                { id: 2, name: 'Suite logique', icon: '🔢', duration: '8 min', description: 'Continue la série de formes' },
+                { id: 3, name: 'Labyrinthe', icon: '🗺️', duration: '5 min', description: 'Trouve la sortie du labyrinthe' },
+                { id: 4, name: 'Attention soutenue', icon: '👁️', duration: '10 min', description: 'Barre tous les symboles identiques' }
+            ],
+            older: [
+                { id: 1, name: 'Pomodoro Focus', icon: '🍅', duration: '25 min', description: 'Travaille 25 min sans interruption' },
+                { id: 2, name: 'Sudoku', icon: '📊', duration: '15 min', description: 'Résous une grille de sudoku' },
+                { id: 3, name: 'Lecture active', icon: '📖', duration: '20 min', description: 'Lis et résume un texte' },
+                { id: 4, name: 'Méditation focus', icon: '🧘', duration: '10 min', description: 'Concentre-toi sur ta respiration' }
+            ]
+        };
+
+        // Exercices de respiration
+        const breathingExercises = [
+            {
+                id: 1,
+                name: 'Respiration du ballon',
+                icon: '🎈',
+                duration: '3 min',
+                steps: [
+                    'Assieds-toi confortablement',
+                    'Imagine un ballon dans ton ventre',
+                    'Inspire lentement par le nez (le ballon se gonfle)',
+                    'Expire doucement par la bouche (le ballon se dégonfle)',
+                    'Répète 10 fois'
+                ]
+            },
+            {
+                id: 2,
+                name: 'Respiration 4-4-4',
+                icon: '🔲',
+                duration: '5 min',
+                steps: [
+                    'Installe-toi confortablement',
+                    'Inspire en comptant jusqu\'à 4',
+                    'Retiens ta respiration 4 secondes',
+                    'Expire en comptant jusqu\'à 4',
+                    'Recommence 8 fois'
+                ]
+            },
+            {
+                id: 3,
+                name: 'Respiration de l\'abeille',
+                icon: '🐝',
+                duration: '2 min',
+                steps: [
+                    'Assieds-toi bien droit',
+                    'Bouche les oreilles avec tes pouces',
+                    'Inspire profondément par le nez',
+                    'En expirant, fais le son "mmmmm"',
+                    'Sens les vibrations, répète 6 fois'
+                ]
+            }
+        ];
+
+        // Mini-jeux
+        const miniGames = {
+            young: [
+                {
+                    id: 1,
+                    name: 'Compte les objets',
+                    icon: '🔢',
+                    description: 'Compte combien il y a d\'objets',
+                    questions: [
+                        { question: 'Combien y a-t-il de 🍎 ?', items: '🍎🍎🍎', answer: 3, options: [2, 3, 4] },
+                        { question: 'Combien y a-t-il de ⭐ ?', items: '⭐⭐⭐⭐⭐', answer: 5, options: [4, 5, 6] },
+                        { question: 'Combien y a-t-il de 🐶 ?', items: '🐶🐶', answer: 2, options: [1, 2, 3] }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: 'Trouve la couleur',
+                    icon: '🎨',
+                    description: 'Reconnais les couleurs',
+                    questions: [
+                        { question: 'De quelle couleur est 🍎 ?', answer: 'Rouge', options: ['Rouge', 'Bleu', 'Vert'] },
+                        { question: 'De quelle couleur est 🌞 ?', answer: 'Jaune', options: ['Jaune', 'Rouge', 'Bleu'] },
+                        { question: 'De quelle couleur est 🌳 ?', answer: 'Vert', options: ['Vert', 'Rouge', 'Jaune'] }
+                    ]
+                }
+            ],
+            middle: [
+                {
+                    id: 1,
+                    name: 'Tables de multiplication',
+                    icon: '✖️',
+                    description: 'Entraîne-toi aux multiplications',
+                    questions: [
+                        { question: '3 × 4 = ?', answer: 12, options: [10, 12, 14] },
+                        { question: '5 × 6 = ?', answer: 30, options: [28, 30, 32] },
+                        { question: '7 × 8 = ?', answer: 56, options: [54, 56, 58] }
+                    ]
+                }
+            ],
+            older: [
+                {
+                    id: 1,
+                    name: 'Calcul mental',
+                    icon: '🧮',
+                    description: 'Résous rapidement',
+                    questions: [
+                        { question: '15 + 27 = ?', answer: 42, options: [40, 42, 44] },
+                        { question: '83 - 36 = ?', answer: 47, options: [45, 47, 49] },
+                        { question: '12 × 8 = ?', answer: 96, options: [94, 96, 98] }
+                    ]
+                }
+            ]
+        };
+
+        // Composant principal
+        function App() {
+            const [view, setView] = useState('home');
+            const [ageGroup, setAgeGroup] = useState(null);
+            const [routines, setRoutines] = useState([]);
+            const [selectedRoutine, setSelectedRoutine] = useState(null);
+            const [currentStep, setCurrentStep] = useState(0);
+            const [stars, setStars] = useState(0);
+            const [timerSeconds, setTimerSeconds] = useState(0);
+            const [isTimerRunning, setIsTimerRunning] = useState(false);
+            const [selectedEmotion, setSelectedEmotion] = useState(null);
+            const [selectedExercise, setSelectedExercise] = useState(null);
+            const [emotionHistory, setEmotionHistory] = useState([]);
+            const [messages, setMessages] = useState([
+                { id: 1, from: 'parent', text: 'Bravo mon champion ! 💪', time: 'Il y a 2h', read: false }
+            ]);
+            const [selectedGame, setSelectedGame] = useState(null);
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [gameScore, setGameScore] = useState(0);
+
+            const selectAge = (age) => {
+                setAgeGroup(age);
+                setRoutines(getRoutinesByAge(age));
+                setView('child');
+            };
+
+            const logEmotion = (emotion) => {
+                const now = new Date();
+                setEmotionHistory(prev => [{
+                    emotion: emotion,
+                    timestamp: now.toLocaleString('fr-FR'),
+                    date: now.toLocaleDateString('fr-FR'),
+                    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                }, ...prev].slice(0, 20));
+            };
+
+            useEffect(() => {
+                let interval;
+                if (isTimerRunning && timerSeconds > 0) {
+                    interval = setInterval(() => {
+                        setTimerSeconds(prev => {
+                            if (prev <= 1) {
+                                setIsTimerRunning(false);
+                                alert('⏰ Temps écoulé !');
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [isTimerRunning, timerSeconds]);
+
+            const styles = {
+                iconSize: ageGroup === 'young' ? '150px' : ageGroup === 'middle' ? '120px' : '100px',
+                fontSize: ageGroup === 'young' ? '48px' : ageGroup === 'middle' ? '42px' : '36px',
+                cardPadding: ageGroup === 'young' ? '50px 40px' : ageGroup === 'middle' ? '40px 30px' : '35px 25px'
+            };
+
+            // Écran de sélection d'âge
+            if (!ageGroup || view === 'ageSelect') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px'
+                    }}>
+                        <div style={{ textAlign: 'center', color: 'white', maxWidth: '1200px' }}>
+                            <h1 style={{ fontSize: '64px', marginBottom: '20px', textShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
+                                🌈 Mon Compagnon
+                            </h1>
+                            <p style={{ fontSize: '28px', marginBottom: '60px', opacity: 0.95 }}>
+                                Choisis ton groupe d'âge
+                            </p>
+                            
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '30px',
+                                maxWidth: '1000px',
+                                margin: '0 auto'
+                            }}>
+                                <button onClick={() => selectAge('young')} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: '50px 30px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-10px)';
+                                    e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.4)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                                }}
+                                >
+                                    <div style={{ fontSize: '100px', marginBottom: '20px' }}>🧒</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>
+                                        3-6 ans
+                                    </div>
+                                    <div style={{ fontSize: '18px', color: '#666' }}>
+                                        Maternelle
+                                    </div>
+                                </button>
+
+                                <button onClick={() => selectAge('middle')} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: '50px 30px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-10px)';
+                                    e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.4)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                                }}
+                                >
+                                    <div style={{ fontSize: '100px', marginBottom: '20px' }}>👦</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>
+                                        7-9 ans
+                                    </div>
+                                    <div style={{ fontSize: '18px', color: '#666' }}>
+                                        Primaire
+                                    </div>
+                                </button>
+
+                                <button onClick={() => selectAge('older')} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: '50px 30px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-10px)';
+                                    e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.4)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                                }}
+                                >
+                                    <div style={{ fontSize: '100px', marginBottom: '20px' }}>🧑</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>
+                                        10-12 ans
+                                    </div>
+                                    <div style={{ fontSize: '18px', color: '#666' }}>
+                                        Collège
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Menu principal enfant
+            if (view === 'child') {
+                const mainModules = [
+                    { id: 'routines', name: 'Mes Routines', icon: '📋', color: '#4facfe', view: 'routinesList' },
+                    { id: 'emotions', name: 'Mes Émotions', icon: '😊', color: '#f093fb', view: 'emotions' },
+                    { id: 'concentration', name: 'Concentration', icon: '🧠', color: '#11998e', view: 'concentration' },
+                    { id: 'breathing', name: 'Respiration', icon: '🧘', color: '#667eea', view: 'breathing' },
+                    { id: 'learning', name: 'Jeux Éducatifs', icon: '🎮', color: '#f5576c', view: 'learning' },
+                    { id: 'timer', name: 'Mon Timer', icon: '⏱️', color: '#ffa726', view: 'timerVisual' },
+                    { id: 'journal', name: 'Mon Journal', icon: '📊', color: '#9c27b0', view: 'emotionJournal' },
+                    { id: 'messages', name: 'Messages', icon: '💬', color: '#00bcd4', view: 'messages', badge: messages.filter(m => !m.read && m.from === 'parent').length }
+                ];
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        padding: '20px'
+                    }}>
+                        {/* Header avec étoiles */}
+                        <div style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            padding: '20px 30px',
+                            marginBottom: '30px',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <h1 style={{ margin: 0, fontSize: styles.fontSize, color: '#333' }}>
+                                🌈 Mon Compagnon
+                            </h1>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <div style={{ fontSize: '32px' }}>
+                                    {Array(Math.min(stars, 10)).fill('⭐').join('')}
+                                </div>
+                                {stars > 10 && (
+                                    <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff9800' }}>
+                                        +{stars - 10}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <h2 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: ageGroup === 'young' ? '32px' : '28px',
+                            marginBottom: '40px'
+                        }}>
+                            {ageGroup === 'young' ? 'Que veux-tu faire ?' : 'Choisis une activité'}
+                        </h2>
+
+                        {/* Grille de modules */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                            gap: '25px',
+                            maxWidth: '1200px',
+                            margin: '0 auto'
+                        }}>
+                            {mainModules.map(module => (
+                                <button key={module.id} onClick={() => setView(module.view)} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: styles.cardPadding,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s',
+                                    textAlign: 'center',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-10px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.2)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                                }}
+                                >
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: '5px',
+                                        background: module.color
+                                    }}></div>
+                                    {module.badge && module.badge > 0 && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '15px',
+                                            right: '15px',
+                                            background: '#f44336',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            width: '30px',
+                                            height: '30px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '16px',
+                                            fontWeight: 'bold',
+                                            boxShadow: '0 2px 8px rgba(244, 67, 54, 0.5)'
+                                        }}>
+                                            {module.badge}
+                                        </div>
+                                    )}
+                                    <div style={{ fontSize: styles.iconSize, marginBottom: '15px' }}>
+                                        {module.icon}
+                                    </div>
+                                    <div style={{ fontSize: ageGroup === 'young' ? '22px' : '20px', color: '#333', fontWeight: 'bold' }}>
+                                        {module.name}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Bouton paramètres */}
+                        <button onClick={() => setView('ageSelect')} style={{
+                            position: 'fixed',
+                            bottom: '20px',
+                            right: '20px',
+                            background: 'white',
+                            border: '2px solid #667eea',
+                            borderRadius: '50%',
+                            width: '60px',
+                            height: '60px',
+                            fontSize: '28px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            ⚙️
+                        </button>
+                    </div>
+                );
+            }
+
+            // Liste des routines
+            if (view === 'routinesList') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: 'white',
+                            fontSize: styles.fontSize,
+                            marginBottom: '40px',
+                            textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                        }}>
+                            Mes Routines 📋
+                        </h1>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                            gap: '25px',
+                            maxWidth: '1100px',
+                            margin: '0 auto'
+                        }}>
+                            {routines.map(routine => (
+                                <button key={routine.id} onClick={() => {
+                                    setSelectedRoutine(routine);
+                                    setCurrentStep(0);
+                                    setView('routine');
+                                }} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '25px',
+                                    padding: '40px 30px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    textAlign: 'center',
+                                    transition: 'transform 0.3s'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                >
+                                    <div style={{ fontSize: '80px', marginBottom: '15px' }}>
+                                        {routine.icon}
+                                    </div>
+                                    <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '10px', fontWeight: 'bold' }}>
+                                        {routine.name}
+                                    </h3>
+                                    <p style={{ fontSize: '16px', color: '#666' }}>
+                                        {routine.steps.length} étapes
+                                    </p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Exécution d'une routine
+            if (view === 'routine' && selectedRoutine) {
+                const currentStepData = selectedRoutine.steps[currentStep];
+                const isComplete = currentStep >= selectedRoutine.steps.length;
+                const completedSteps = selectedRoutine.steps.filter(s => s.done).length;
+                const progress = (completedSteps / selectedRoutine.steps.length) * 100;
+
+                if (isComplete) {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '20px'
+                        }}>
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                maxWidth: '600px'
+                            }}>
+                                <div style={{ fontSize: '120px', marginBottom: '20px' }}>🎉</div>
+                                <h2 style={{ fontSize: '40px', color: '#333', marginBottom: '20px' }}>
+                                    {ageGroup === 'young' ? 'Bravo !' : 'Félicitations !'}
+                                </h2>
+                                <p style={{ fontSize: '24px', color: '#666', marginBottom: '40px' }}>
+                                    Tu as terminé ta routine !
+                                </p>
+                                <button onClick={() => {
+                                    setStars(prev => prev + 1);
+                                    setView('routinesList');
+                                    setSelectedRoutine(null);
+                                }} style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '20px 40px',
+                                    fontSize: '22px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+                                }}>
+                                    {ageGroup === 'young' ? 'C\'est fini ! ⭐' : 'Terminer ⭐'}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => {
+                            setView('routinesList');
+                            setSelectedRoutine(null);
+                        }} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: 'white',
+                            fontSize: '32px',
+                            marginBottom: '20px'
+                        }}>
+                            {selectedRoutine.icon} {selectedRoutine.name}
+                        </h1>
+
+                        {/* Barre de progression */}
+                        <div style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            padding: '20px',
+                            marginBottom: '30px',
+                            maxWidth: '800px',
+                            margin: '0 auto 30px auto',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                marginBottom: '10px'
+                            }}>
+                                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Progression</span>
+                                <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#4facfe' }}>
+                                    {completedSteps}/{selectedRoutine.steps.length}
+                                </span>
+                            </div>
+                            <div style={{
+                                width: '100%',
+                                height: '20px',
+                                background: '#e0e0e0',
+                                borderRadius: '10px',
+                                overflow: 'hidden'
+                            }}>
+                                <div style={{
+                                    width: `${progress}%`,
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #4facfe 0%, #00f2fe 100%)',
+                                    transition: 'width 0.5s ease'
+                                }}></div>
+                            </div>
+                        </div>
+
+                        {/* Étape actuelle */}
+                        <div style={{
+                            background: 'white',
+                            borderRadius: '30px',
+                            padding: '60px',
+                            textAlign: 'center',
+                            maxWidth: '700px',
+                            margin: '0 auto',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                        }}>
+                            <div style={{ fontSize: ageGroup === 'young' ? '150px' : '120px', marginBottom: '30px' }}>
+                                {currentStepData.icon}
+                            </div>
+                            <h2 style={{ fontSize: ageGroup === 'young' ? '36px' : '32px', color: '#333', marginBottom: '40px' }}>
+                                {currentStepData.text}
+                            </h2>
+                            <button onClick={() => {
+                                selectedRoutine.steps[currentStep].done = true;
+                                setCurrentStep(prev => prev + 1);
+                            }} style={{
+                                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '20px',
+                                padding: ageGroup === 'young' ? '25px 50px' : '20px 40px',
+                                fontSize: ageGroup === 'young' ? '28px' : '24px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                boxShadow: '0 6px 20px rgba(79, 172, 254, 0.4)',
+                                transition: 'transform 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                            >
+                                {ageGroup === 'young' ? 'C\'est fait ! ✅' : 'Terminé ✅'}
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Module Émotions
+            if (view === 'emotions') {
+                if (!selectedEmotion) {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            padding: '20px'
+                        }}>
+                            <button onClick={() => setView('child')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                ← Retour
+                            </button>
+
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                fontSize: styles.fontSize,
+                                marginBottom: '20px',
+                                textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                            }}>
+                                {ageGroup === 'young' ? 'Comment tu te sens ?' : 'Quelle est ton émotion ?'}
+                            </h1>
+                            <p style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                fontSize: '18px',
+                                marginBottom: '40px',
+                                opacity: 0.9
+                            }}>
+                                Clique sur l'émotion qui correspond
+                            </p>
+
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gap: '25px',
+                                maxWidth: '1000px',
+                                margin: '0 auto'
+                            }}>
+                                {emotions.map(emotion => (
+                                    <button key={emotion.id} onClick={() => {
+                                        setSelectedEmotion(emotion);
+                                        logEmotion(emotion);
+                                    }} style={{
+                                        background: 'white',
+                                        border: `5px solid ${emotion.color}`,
+                                        borderRadius: '25px',
+                                        padding: '40px 20px',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                        textAlign: 'center',
+                                        transition: 'transform 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                    >
+                                        <div style={{ fontSize: ageGroup === 'young' ? '100px' : '80px', marginBottom: '15px' }}>
+                                            {emotion.icon}
+                                        </div>
+                                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>
+                                            {emotion.name}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            padding: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                maxWidth: '700px',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            }}>
+                                <div style={{ fontSize: '120px', marginBottom: '20px' }}>
+                                    {selectedEmotion.icon}
+                                </div>
+                                <h2 style={{ fontSize: '36px', color: '#333', marginBottom: '20px' }}>
+                                    Tu te sens {selectedEmotion.name.toLowerCase()}
+                                </h2>
+                                <p style={{ fontSize: '20px', color: '#666', marginBottom: '30px' }}>
+                                    C'est normal ! Voici quelques conseils :
+                                </p>
+                                <div style={{
+                                    background: '#f9f9f9',
+                                    borderRadius: '15px',
+                                    padding: '25px',
+                                    marginBottom: '30px',
+                                    textAlign: 'left'
+                                }}>
+                                    {selectedEmotion.tips.map((tip, index) => (
+                                        <p key={index} style={{
+                                            fontSize: '18px',
+                                            color: '#555',
+                                            marginBottom: index < selectedEmotion.tips.length - 1 ? '15px' : '0',
+                                            paddingLeft: '10px'
+                                        }}>
+                                            💡 {tip}
+                                        </p>
+                                    ))}
+                                </div>
+                                <button onClick={() => {
+                                    setSelectedEmotion(null);
+                                    setStars(prev => prev + 1);
+                                    setView('child');
+                                }} style={{
+                                    background: selectedEmotion.color,
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 40px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: `0 4px 15px ${selectedEmotion.color}66`
+                                }}>
+                                    Merci ! ⭐
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+
+            // Module Concentration
+            if (view === 'concentration') {
+                const exercises = concentrationExercises[ageGroup] || [];
+
+                if (!selectedExercise) {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                            padding: '20px'
+                        }}>
+                            <button onClick={() => setView('child')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                ← Retour
+                            </button>
+
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                fontSize: styles.fontSize,
+                                marginBottom: '40px',
+                                textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                            }}>
+                                Exercices de Concentration 🧠
+                            </h1>
+
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '25px',
+                                maxWidth: '1100px',
+                                margin: '0 auto'
+                            }}>
+                                {exercises.map(exercise => (
+                                    <button key={exercise.id} onClick={() => setSelectedExercise(exercise)} style={{
+                                        background: 'white',
+                                        border: 'none',
+                                        borderRadius: '25px',
+                                        padding: '40px 30px',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                        textAlign: 'center',
+                                        transition: 'transform 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ fontSize: '70px', marginBottom: '15px' }}>
+                                            {exercise.icon}
+                                        </div>
+                                        <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '10px', fontWeight: 'bold' }}>
+                                            {exercise.name}
+                                        </h3>
+                                        <p style={{ fontSize: '16px', color: '#666', marginBottom: '10px' }}>
+                                            {exercise.description}
+                                        </p>
+                                        <div style={{
+                                            background: '#11998e',
+                                            color: 'white',
+                                            borderRadius: '10px',
+                                            padding: '8px 15px',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            display: 'inline-block'
+                                        }}>
+                                            ⏱️ {exercise.duration}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                            padding: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                maxWidth: '700px',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            }}>
+                                <div style={{ fontSize: '100px', marginBottom: '20px' }}>
+                                    {selectedExercise.icon}
+                                </div>
+                                <h2 style={{ fontSize: '32px', color: '#333', marginBottom: '15px' }}>
+                                    {selectedExercise.name}
+                                </h2>
+                                <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
+                                    {selectedExercise.description}
+                                </p>
+                                <div style={{
+                                    background: '#f1f8e9',
+                                    borderRadius: '15px',
+                                    padding: '20px',
+                                    marginBottom: '30px'
+                                }}>
+                                    <p style={{ fontSize: '16px', color: '#555' }}>
+                                        Durée : <strong>{selectedExercise.duration}</strong>
+                                    </p>
+                                </div>
+                                <button onClick={() => {
+                                    setSelectedExercise(null);
+                                    setStars(prev => prev + 1);
+                                }} style={{
+                                    background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 40px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 15px rgba(17, 153, 142, 0.4)'
+                                }}>
+                                    Terminé ! ⭐
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+
+            // Module Respiration
+            if (view === 'breathing') {
+                if (!selectedExercise) {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            padding: '20px'
+                        }}>
+                            <button onClick={() => setView('child')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                ← Retour
+                            </button>
+
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                fontSize: styles.fontSize,
+                                marginBottom: '40px',
+                                textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                            }}>
+                                Exercices de Respiration 🧘
+                            </h1>
+
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '25px',
+                                maxWidth: '1000px',
+                                margin: '0 auto'
+                            }}>
+                                {breathingExercises.map(exercise => (
+                                    <button key={exercise.id} onClick={() => setSelectedExercise(exercise)} style={{
+                                        background: 'white',
+                                        border: 'none',
+                                        borderRadius: '25px',
+                                        padding: '40px 30px',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                        textAlign: 'center',
+                                        transition: 'transform 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ fontSize: '70px', marginBottom: '15px' }}>
+                                            {exercise.icon}
+                                        </div>
+                                        <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '10px', fontWeight: 'bold' }}>
+                                            {exercise.name}
+                                        </h3>
+                                        <div style={{
+                                            background: '#667eea',
+                                            color: 'white',
+                                            borderRadius: '10px',
+                                            padding: '8px 15px',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            display: 'inline-block',
+                                            marginTop: '10px'
+                                        }}>
+                                            ⏱️ {exercise.duration}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            padding: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                maxWidth: '700px',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            }}>
+                                <div style={{ fontSize: '100px', marginBottom: '20px' }}>
+                                    {selectedExercise.icon}
+                                </div>
+                                <h2 style={{ fontSize: '32px', color: '#333', marginBottom: '30px' }}>
+                                    {selectedExercise.name}
+                                </h2>
+                                <div style={{
+                                    background: '#f9f9f9',
+                                    borderRadius: '15px',
+                                    padding: '25px',
+                                    marginBottom: '30px',
+                                    textAlign: 'left'
+                                }}>
+                                    {selectedExercise.steps.map((step, index) => (
+                                        <div key={index} style={{
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            marginBottom: index < selectedExercise.steps.length - 1 ? '15px' : '0'
+                                        }}>
+                                            <div style={{
+                                                background: '#667eea',
+                                                color: 'white',
+                                                borderRadius: '50%',
+                                                width: '30px',
+                                                height: '30px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontWeight: 'bold',
+                                                marginRight: '15px',
+                                                flexShrink: 0
+                                            }}>
+                                                {index + 1}
+                                            </div>
+                                            <p style={{ fontSize: '16px', color: '#555', margin: 0, paddingTop: '4px' }}>
+                                                {step}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button onClick={() => {
+                                    setSelectedExercise(null);
+                                    setStars(prev => prev + 1);
+                                }} style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 40px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+                                }}>
+                                    Terminé ! ⭐
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+
+            // Module Timer
+            if (view === 'timerVisual') {
+                const minutes = Math.floor(timerSeconds / 60);
+                const seconds = timerSeconds % 60;
+                const displayTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: 'white',
+                            fontSize: styles.fontSize,
+                            marginBottom: '40px',
+                            textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                        }}>
+                            Mon Timer ⏱️
+                        </h1>
+
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '30px'
+                        }}>
+                            {/* Affichage du timer */}
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '30px',
+                                padding: '60px',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{
+                                    fontSize: ageGroup === 'young' ? '120px' : '100px',
+                                    fontWeight: 'bold',
+                                    color: isTimerRunning ? '#4caf50' : timerSeconds === 0 ? '#2196f3' : '#f44336',
+                                    fontFamily: 'monospace',
+                                    marginBottom: '30px'
+                                }}>
+                                    {displayTime}
+                                </div>
+
+                                {/* Boutons de contrôle */}
+                                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                                    <button onClick={() => setIsTimerRunning(!isTimerRunning)} disabled={timerSeconds === 0} style={{
+                                        background: isTimerRunning ? '#f44336' : '#4caf50',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '15px',
+                                        padding: '15px 30px',
+                                        fontSize: '18px',
+                                        cursor: timerSeconds === 0 ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold',
+                                        opacity: timerSeconds === 0 ? 0.5 : 1
+                                    }}>
+                                        {isTimerRunning ? '⏸️ Pause' : '▶️ Démarrer'}
+                                    </button>
+                                    <button onClick={() => {
+                                        setTimerSeconds(0);
+                                        setIsTimerRunning(false);
+                                    }} style={{
+                                        background: '#607d8b',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '15px',
+                                        padding: '15px 30px',
+                                        fontSize: '18px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        🔄 Réinitialiser
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Choix rapide */}
+                            {timerSeconds === 0 && (
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '25px',
+                                    padding: '30px',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                                }}>
+                                    <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#333', marginBottom: '20px', textAlign: 'center' }}>
+                                        Choix rapide :
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                        {[5, 10, 15, 25].map(min => (
+                                            <button key={min} onClick={() => setTimerSeconds(min * 60)} style={{
+                                                background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '15px',
+                                                padding: '15px 25px',
+                                                fontSize: '18px',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                {min} min
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Module Journal des émotions
+            if (view === 'emotionJournal') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <h1 style={{
+                            textAlign: 'center',
+                            color: '#333',
+                            fontSize: styles.fontSize,
+                            marginBottom: '20px'
+                        }}>
+                            Mon Journal d'Émotions 📊
+                        </h1>
+
+                        {emotionHistory.length === 0 ? (
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '25px',
+                                padding: '60px',
+                                textAlign: 'center',
+                                maxWidth: '600px',
+                                margin: '0 auto',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                            }}>
+                                <div style={{ fontSize: '80px', marginBottom: '20px' }}>😊</div>
+                                <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '15px' }}>
+                                    Commence ton journal !
+                                </h3>
+                                <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
+                                    Va dans "Mes Émotions" pour enregistrer comment tu te sens
+                                </p>
+                                <button onClick={() => setView('emotions')} style={{
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 30px',
+                                    fontSize: '18px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}>
+                                    Enregistrer une émotion
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '20px',
+                                    padding: '30px',
+                                    marginBottom: '30px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                                }}>
+                                    <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '20px' }}>
+                                        📊 Résumé
+                                    </h3>
+                                    <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                        {emotions.map(emotion => {
+                                            const count = emotionHistory.filter(e => e.emotion.id === emotion.id).length;
+                                            if (count === 0) return null;
+                                            return (
+                                                <div key={emotion.id} style={{
+                                                    background: '#f9f9f9',
+                                                    borderRadius: '15px',
+                                                    padding: '15px 20px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    border: `2px solid ${emotion.color}`
+                                                }}>
+                                                    <span style={{ fontSize: '32px' }}>{emotion.icon}</span>
+                                                    <div>
+                                                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#333' }}>
+                                                            {emotion.name}
+                                                        </div>
+                                                        <div style={{ fontSize: '14px', color: '#666' }}>
+                                                            {count} fois
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '20px',
+                                    padding: '30px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                                }}>
+                                    <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '20px' }}>
+                                        📅 Historique
+                                    </h3>
+                                    <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                                        {emotionHistory.map((entry, idx) => (
+                                            <div key={idx} style={{
+                                                background: '#f9f9f9',
+                                                borderRadius: '15px',
+                                                padding: '20px',
+                                                marginBottom: '15px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '20px',
+                                                borderLeft: `5px solid ${entry.emotion.color}`
+                                            }}>
+                                                <div style={{ fontSize: '48px' }}>
+                                                    {entry.emotion.icon}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+                                                        {entry.emotion.name}
+                                                    </div>
+                                                    <div style={{ fontSize: '14px', color: '#666' }}>
+                                                        {entry.date} à {entry.time}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Module Messages (simplifié)
+            if (view === 'messages') {
+                return (
+                    <div style={{
+                        minHeight: '100vh',
+                        background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        padding: '20px'
+                    }}>
+                        <button onClick={() => setView('child')} style={{
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 25px',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            marginBottom: '30px'
+                        }}>
+                            ← Retour
+                        </button>
+
+                        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: '#333',
+                                fontSize: styles.fontSize,
+                                marginBottom: '40px'
+                            }}>
+                                💬 Mes Messages
+                            </h1>
+
+                            <div style={{
+                                background: 'white',
+                                borderRadius: '25px',
+                                padding: '30px',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                            }}>
+                                {messages.map(msg => (
+                                    <div key={msg.id} style={{
+                                        background: msg.from === 'parent' ? '#e3f2fd' : '#f1f8e9',
+                                        borderRadius: '15px',
+                                        padding: '20px',
+                                        marginBottom: '15px',
+                                        borderLeft: `5px solid ${msg.from === 'parent' ? '#2196f3' : '#8bc34a'}`
+                                    }}>
+                                        <div style={{
+                                            fontSize: '18px',
+                                            fontWeight: 'bold',
+                                            marginBottom: '10px',
+                                            color: '#333'
+                                        }}>
+                                            {msg.from === 'parent' ? '👨‍👩‍👧 Papa/Maman' : '👦 Moi'}
+                                        </div>
+                                        <div style={{ fontSize: '18px', color: '#555', marginBottom: '10px' }}>
+                                            {msg.text}
+                                        </div>
+                                        <div style={{ fontSize: '14px', color: '#666' }}>
+                                            {msg.time}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Module Jeux Éducatifs
+            if (view === 'learning') {
+                const games = miniGames[ageGroup] || [];
+
+                if (!selectedGame) {
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            padding: '20px'
+                        }}>
+                            <button onClick={() => setView('child')} style={{
+                                background: 'white',
+                                border: 'none',
+                                borderRadius: '15px',
+                                padding: '15px 25px',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                marginBottom: '30px'
+                            }}>
+                                ← Retour
+                            </button>
+
+                            <h1 style={{
+                                textAlign: 'center',
+                                color: '#333',
+                                fontSize: styles.fontSize,
+                                marginBottom: '40px'
+                            }}>
+                                Jeux Éducatifs 🎮
+                            </h1>
+
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '25px',
+                                maxWidth: '1100px',
+                                margin: '0 auto'
+                            }}>
+                                {games.map(game => (
+                                    <button key={game.id} onClick={() => {
+                                        setSelectedGame(game);
+                                        setCurrentQuestion(0);
+                                        setGameScore(0);
+                                    }} style={{
+                                        background: 'white',
+                                        border: 'none',
+                                        borderRadius: '25px',
+                                        padding: '40px 30px',
+                                        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                        textAlign: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ fontSize: '70px', marginBottom: '15px' }}>
+                                            {game.icon}
+                                        </div>
+                                        <h3 style={{ fontSize: '24px', color: '#333', marginBottom: '10px', fontWeight: 'bold' }}>
+                                            {game.name}
+                                        </h3>
+                                        <p style={{ fontSize: '16px', color: '#666', marginBottom: '15px' }}>
+                                            {game.description}
+                                        </p>
+                                        <div style={{
+                                            background: '#f0f0f0',
+                                            borderRadius: '10px',
+                                            padding: '8px',
+                                            fontSize: '14px',
+                                            color: '#555'
+                                        }}>
+                                            {game.questions.length} questions
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                } else {
+                    const question = selectedGame.questions[currentQuestion];
+                    const isComplete = currentQuestion >= selectedGame.questions.length;
+
+                    if (isComplete) {
+                        return (
+                            <div style={{
+                                minHeight: '100vh',
+                                background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '20px'
+                            }}>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '30px',
+                                    padding: '60px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                    maxWidth: '600px'
+                                }}>
+                                    <div style={{ fontSize: '100px', marginBottom: '20px' }}>
+                                        {gameScore === selectedGame.questions.length ? '🏆' : gameScore > selectedGame.questions.length / 2 ? '🌟' : '💪'}
+                                    </div>
+                                    <h2 style={{ fontSize: '36px', color: '#333', marginBottom: '20px' }}>
+                                        {gameScore === selectedGame.questions.length ? 'Parfait !' : gameScore > selectedGame.questions.length / 2 ? 'Bien joué !' : 'Continue !'}
+                                    </h2>
+                                    <p style={{ fontSize: '24px', color: '#666', marginBottom: '40px' }}>
+                                        Score : {gameScore}/{selectedGame.questions.length}
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                        <button onClick={() => {
+                                            setSelectedGame(null);
+                                            setStars(prev => prev + gameScore);
+                                        }} style={{
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            padding: '15px 30px',
+                                            fontSize: '18px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Autre jeu
+                                        </button>
+                                        <button onClick={() => {
+                                            setCurrentQuestion(0);
+                                            setGameScore(0);
+                                        }} style={{
+                                            background: '#f0f0f0',
+                                            color: '#333',
+                                            border: 'none',
+                                            borderRadius: '15px',
+                                            padding: '15px 30px',
+                                            fontSize: '18px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Rejouer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div style={{
+                            minHeight: '100vh',
+                            background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '20px'
+                            }}>
+                                <button onClick={() => setSelectedGame(null)} style={{
+                                    background: 'white',
+                                    border: 'none',
+                                    borderRadius: '15px',
+                                    padding: '15px 25px',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    ← Quitter
+                                </button>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '15px',
+                                    padding: '15px 25px',
+                                    fontSize: '20px',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                                }}>
+                                    Question {currentQuestion + 1}/{selectedGame.questions.length}
+                                </div>
+                            </div>
+
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{
+                                    background: 'white',
+                                    borderRadius: '30px',
+                                    padding: '50px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                                    maxWidth: '700px',
+                                    width: '100%'
+                                }}>
+                                    {question.items && (
+                                        <div style={{ fontSize: '60px', marginBottom: '20px' }}>
+                                            {question.items}
+                                        </div>
+                                    )}
+
+                                    <h2 style={{ fontSize: '32px', color: '#333', marginBottom: '40px' }}>
+                                        {question.question}
+                                    </h2>
+
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: ageGroup === 'young' ? '1fr' : 'repeat(auto-fit, minmax(150px, 1fr))',
+                                        gap: '15px'
+                                    }}>
+                                        {question.options.map((option, idx) => (
+                                            <button key={idx} onClick={() => {
+                                                if (option === question.answer) {
+                                                    setGameScore(prev => prev + 1);
+                                                    alert('✅ Bravo ! Bonne réponse !');
+                                                } else {
+                                                    alert('❌ Pas tout à fait...');
+                                                }
+                                                setTimeout(() => setCurrentQuestion(prev => prev + 1), 500);
+                                            }} style={{
+                                                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '15px',
+                                                padding: ageGroup === 'young' ? '25px' : '20px',
+                                                fontSize: ageGroup === 'young' ? '28px' : '22px',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 4px 10px rgba(79, 172, 254, 0.3)',
+                                                transition: 'transform 0.2s'
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                            >
+                                                {option}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+
+            // Vue par défaut
+            return (
+                <div style={{
+                    minHeight: '100vh',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '30px',
+                        padding: '60px',
+                        textAlign: 'center',
+                        maxWidth: '600px'
+                    }}>
+                        <div style={{ fontSize: '100px', marginBottom: '20px' }}>🚧</div>
+                        <h2 style={{ fontSize: '32px', color: '#333', marginBottom: '20px' }}>
+                            En développement
+                        </h2>
+                        <button onClick={() => setView('child')} style={{
+                            background: '#667eea',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '15px',
+                            padding: '15px 40px',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}>
+                            Retour
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>
